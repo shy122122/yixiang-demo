@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞鸟驿乡 · 游客端</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css">
+<style>
+/* ========= 云上青竹 · 设计令牌 ========= */
+:root{
+  --b900:#093B30; --b800:#0B4D3F; --b700:#0E6352; --b600:#14785C; --b500:#1E8A6C;
+  --b400:#3FA586; --b300:#7CC2A8; --b200:#B6DDCB; --b100:#DCEFE5; --b50:#EFF7F3;
+  --sun:#E8943A; --sun-d:#CE7627; --sun-50:#FCEFDC; --sun-100:#F7E2C4;
+  --gold:#E9B54E; --ink:#152B24; --ink2:#4C665C; --ink3:#8AA197; --line:#DCE8E1;
+  --red:#D4574F; --red-bg:#FBE6E3; --jade:#2F9E5F; --jade-bg:#E1F3E9; --purple:#8A6FB8;
+  --card:#FFFFFF; --canvas:#F2F7F4; --paper:#FAF5E9;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{width:390px;height:844px;overflow:hidden;background:var(--canvas)}
+body{position:relative;font-family:"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei","Segoe UI",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.kai{font-family:'LXGW WenKai Screen','LXGW WenKai','STKaiti','KaiTi','楷体',serif}
+.num{font-variant-numeric:tabular-nums}
+.screen{position:absolute;top:0;left:0;width:390px;height:844px;display:none;overflow:hidden}
+.screen.active{display:block}
+.fa{line-height:1}
+/* 状态栏 */
+.statusbar{position:absolute;top:0;left:0;right:0;height:44px;z-index:60;display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 6px;font-size:13px;font-weight:600;color:var(--ink)}
+.statusbar.light{color:#fff}
+.statusbar .ic-right{display:flex;gap:6px;font-size:11px;font-weight:500}
+/* 底部导航 */
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:62px;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;z-index:70}
+.tabbar::before{content:"";position:absolute;top:-1px;left:50%;transform:translateX(-50%);width:150px;height:1px;background:linear-gradient(90deg,transparent,rgba(24,132,108,.4),transparent)}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink3);font-size:10px;letter-spacing:.5px}
+.tab .ic{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:16px;transition:.2s}
+.tab.on{color:var(--b700);font-weight:600}
+.tab.on .ic{color:var(--b600)}
+/* 通用小组件 */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;cursor:pointer;font-family:inherit;border-radius:999px;font-weight:600;letter-spacing:.5px;transition:.18s}
+.btn:active{transform:scale(.96)}
+.btn-sun{background:linear-gradient(135deg,#EFA550,#E27E2C);color:#fff;box-shadow:0 8px 18px -6px rgba(226,126,44,.65)}
+.btn-bamboo{background:linear-gradient(135deg,var(--b500),var(--b700));color:#fff;box-shadow:0 8px 18px -6px rgba(20,120,92,.5)}
+.btn-soft{background:var(--b100);color:var(--b700)}
+.btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink2)}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:600}
+.card{background:#fff;border:1px solid rgba(30,138,108,.07);border-radius:20px;box-shadow:0 10px 30px -14px rgba(20,120,92,.16)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.stagger>*{animation:fadeUp .6s cubic-bezier(.2,.7,.3,1) both}
+.stagger>*:nth-child(1){animation-delay:.06s}.stagger>*:nth-child(2){animation-delay:.14s}
+.stagger>*:nth-child(3){animation-delay:.22s}.stagger>*:nth-child(4){animation-delay:.3s}
+.stagger>*:nth-child(5){animation-delay:.38s}.stagger>*:nth-child(6){animation-delay:.46s}
+
+/* ================================================================
+   山顶云海场景底图（复用片段：远处山峦 + 云 + 飞鸟）
+================================================================ */
+.scene{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+
+/* ================================================================
+   首页
+================================================================ */
+.h-sky{position:absolute;top:0;left:0;right:0;height:230px;overflow:hidden;
+  background:linear-gradient(180deg,#DBEFE6 0%,#E9F5EE 60%,#EFF8F3 100%)}
+.h-sky .sun{position:absolute;right:56px;top:52px;width:54px;height:54px;border-radius:50%;
+  background:radial-gradient(circle at 36% 32%,#FFF6DE,#F7DCA0 58%,#E7BE72);filter:blur(.3px);
+  box-shadow:0 0 34px 8px rgba(238,199,116,.45)}
+.h-sky svg{position:absolute;left:0;bottom:0;width:390px;height:190px}
+.h-brand{position:absolute;top:50px;left:22px;z-index:5;display:flex;align-items:center;gap:10px}
+.h-brand .seal{width:34px;height:34px;border-radius:10px;background:linear-gradient(150deg,#1E8A6C,#0E6352);display:grid;place-items:center;color:#E9F5EE;font-size:17px;
+  box-shadow:0 6px 14px -4px rgba(20,120,92,.55), inset 0 1px 0 rgba(255,255,255,.25)}
+.h-brand .nm{font-size:22px;font-weight:700;color:var(--b800);letter-spacing:2px;line-height:1}
+.h-brand .slogan{font-size:9px;color:var(--ink3);letter-spacing:3px;margin-top:3px}
+.h-right{position:absolute;top:52px;right:18px;z-index:5;display:flex;flex-direction:column;align-items:flex-end;gap:7px}
+.h-loc{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.86);border:1px solid rgba(30,138,108,.14);color:var(--b700);padding:5px 11px;border-radius:999px;font-size:10.5px;font-weight:600;box-shadow:0 6px 16px -8px rgba(20,120,92,.5)}
+.h-loc .fa{color:var(--sun);font-size:11px}
+.h-weather{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--ink2);background:rgba(255,255,255,.7);padding:3px 9px;border-radius:999px}
+.h-search{position:absolute;top:196px;left:22px;right:22px;height:46px;z-index:6;background:#fff;border-radius:999px;display:flex;align-items:center;gap:9px;padding:0 15px;box-shadow:0 12px 26px -12px rgba(20,120,92,.28),0 0 0 1px rgba(30,138,108,.08)}
+.h-search .fa-search{color:var(--b500);font-size:14px}
+.h-search input{flex:1;border:none;outline:none;background:transparent;font-size:12.5px;color:var(--ink);font-family:inherit}
+.h-search input::placeholder{color:var(--ink3)}
+.h-search .fl{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--sun-d);font-weight:600;background:var(--sun-50);padding:5px 10px;border-radius:999px}
+
+.h-banner{position:relative;margin:258px 22px 0;height:156px;border-radius:24px;overflow:hidden;
+  background:linear-gradient(118deg,#0C5647 0%,#14785C 52%,#2B9A79 100%)}
+.h-banner .art{position:absolute;inset:0;opacity:.96}
+.h-banner .glass{position:absolute;inset:0;background:linear-gradient(105deg,rgba(9,43,35,.28) 0%,rgba(9,43,35,0) 46%,rgba(9,43,35,.16) 100%)}
+.h-banner .info{position:absolute;left:18px;top:16px;color:#fff;z-index:2}
+.h-banner .tagrow{display:flex;gap:6px;margin-bottom:8px}
+.h-banner .tagrow span{font-size:9.5px;letter-spacing:1px;padding:2.5px 9px;border-radius:999px;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.28)}
+.h-banner h3{font-size:21px;letter-spacing:1px;line-height:1.2;text-shadow:0 1px 8px rgba(0,0,0,.2)}
+.h-banner .sub{font-size:10.5px;opacity:.85;margin-top:4px;letter-spacing:.5px}
+.h-banner .bookrow{position:absolute;left:18px;bottom:14px;right:14px;display:flex;align-items:center;gap:8px;z-index:2}
+.h-banner .price{color:#FFE2B0;font-size:12px;line-height:1.1}
+.h-banner .price b{font-size:23px;font-weight:800}
+.h-banner .btn{width:110px;height:36px;margin-left:auto;font-size:12.5px}
+.h-banner .pill-note{display:flex;flex-direction:column;justify-content:center}
+.h-banner .note{font-size:9px;color:rgba(255,255,255,.8);letter-spacing:.3px}
+
+.chans{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 22px 0}
+.chan{position:relative;border-radius:20px;height:96px;padding:14px 14px;color:#fff;overflow:hidden;cursor:pointer;transition:.2s;box-shadow:0 12px 24px -14px rgba(20,120,92,.4)}
+.chan:active{transform:scale(.97)}
+.chan .big{font-size:16.5px;font-weight:700;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+.chan .sml{font-size:9.5px;opacity:.92;margin-top:5px;letter-spacing:.3px}
+.chan .cta{position:absolute;left:14px;bottom:11px;font-size:10px;opacity:.95;display:inline-flex;align-items:center;gap:3px}
+.chan .ic{position:absolute;right:-8px;top:-8px;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:24px;background:rgba(255,255,255,.16)}
+.chan-a{background:linear-gradient(135deg,#EFA550,#DE7E2B)}
+.chan-b{background:linear-gradient(135deg,#3FA586,#14785C)}
+
+.h-sec{margin:18px 22px 0;display:flex;align-items:baseline;justify-content:space-between}
+.h-sec .t{font-size:16.5px;font-weight:700;letter-spacing:1px}
+.h-sec .m{font-size:10.5px;color:var(--ink3)}
+.recs{display:flex;gap:11px;margin:12px 22px 0;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.recs::-webkit-scrollbar{display:none}
+.rec{flex:none;width:142px;border-radius:18px;overflow:hidden;background:#fff;border:1px solid rgba(30,138,108,.07);box-shadow:0 8px 20px -14px rgba(20,120,92,.22);cursor:pointer}
+.rec .th{position:relative;height:76px;overflow:hidden}
+.rec .tag{position:absolute;left:7px;top:7px;z-index:2;background:rgba(15,42,35,.5);color:#fff;font-size:8.5px;letter-spacing:.5px;padding:2px 7px;border-radius:999px}
+.rec .bd{padding:8px 10px 9px}
+.rec .n{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec .meta{font-size:9.5px;color:var(--ink3);margin-top:3px;display:flex;align-items:center;gap:3px}
+.rec .meta .fa-star{color:var(--gold);font-size:9px}
+.rec .price{display:flex;align-items:baseline;margin-top:4px}
+.rec .price b{color:var(--sun-d);font-size:14px}
+.rec .price span{font-size:9px;color:var(--ink3)}
+.h-foot{margin:18px 0 4px;text-align:center;font-size:9.5px;color:var(--b500);opacity:.7;letter-spacing:4px}
+.recs{position:relative}
+.recs::after{content:"";position:fixed;right:0;top:382px;width:34px;height:152px;background:linear-gradient(90deg,rgba(242,247,244,0),var(--canvas));pointer-events:none}
+/* 首页缩略场景（多彩渐变插画底） */
+.rec-th{width:100%;height:100%}
+.t1{background:linear-gradient(135deg,#0E6352,#2B9A79)}
+.t2{background:linear-gradient(135deg,#B25F1C,#E8934A)}
+.t3{background:linear-gradient(135deg,#8A6FB8,#B39ACF)}
+.t4{background:linear-gradient(135deg,#7C7228,#C7B44A)}
+.t5{background:linear-gradient(135deg,#9A4436,#D4865A)}
+
+/* ================================================================
+   低空预约
+================================================================ */
+.bk-top{position:absolute;top:0;left:0;right:0;height:238px;overflow:hidden;
+  background:linear-gradient(160deg,#0C5647 0%,#14785C 45%,#33A584 100%)}
+.bk-top .towers{position:absolute;inset:0;opacity:.5}
+.bk-top .sun{position:absolute;right:-26px;top:-20px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,#FFD9A0,#EFA950 55%,transparent 72%);opacity:.5}
+.bk-nav{position:absolute;top:44px;left:0;right:0;height:48px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;color:#fff;z-index:6}
+.bk-nav .r{display:flex;align-items:center;gap:10px}
+.bk-nav .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22)}
+.bk-nav .ttl{font-size:15px;font-weight:600;letter-spacing:2px}
+.bk-head{position:absolute;left:20px;right:20px;top:96px;z-index:5;color:#fff}
+.bk-head .tags{display:flex;gap:6px;margin-bottom:9px}
+.bk-head .tags span{font-size:9.5px;letter-spacing:1px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3)}
+.bk-head h2{font-size:21px;letter-spacing:1px;line-height:1.25;text-shadow:0 1px 8px rgba(0,0,0,.2)}
+.bk-head .rate{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:10.5px;opacity:.94}
+.bk-head .rate .fa-star{color:#FFE0A6;font-size:11px}
+.bk-head .rate b{color:#FFE0A6}
+.bk-craft{position:absolute;right:16px;bottom:6px;width:120px;opacity:.92;z-index:4}
+.bk-body{position:absolute;top:238px;bottom:0;left:0;right:0;overflow-y:auto;padding:0 0 96px}
+.bk-body .pad{padding:0 20px}
+.info-strip{display:flex;gap:10px;margin:0 20px;padding:13px 14px;border-radius:16px;background:#fff;border:1px solid rgba(30,138,108,.08);box-shadow:0 10px 24px -16px rgba(20,120,92,.25);transform:translateY(-14px);position:relative}
+.info-strip .it{flex:1;text-align:center;position:relative}
+.info-strip .it+.it::before{content:"";position:absolute;left:0;top:12%;height:76%;width:1px;background:var(--line)}
+.info-strip .k{font-size:9px;color:var(--ink3);letter-spacing:1px}
+.info-strip .v{font-size:12.5px;font-weight:700;margin-top:3px;color:var(--b700)}
+.info-strip .v i{color:var(--sun);font-style:normal;font-weight:600}
+.card{margin-top:12px;padding:14px 16px}
+.card+.card{margin-top:12px}
+.sct{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:11px}
+.sct .t{font-size:14.5px;font-weight:700;letter-spacing:.5px}
+.sct .s{font-size:10px;color:var(--ink3)}
+.dayrow{display:flex;gap:8px}
+.day{flex:none;width:46px;padding:8px 0 7px;border-radius:14px;display:flex;flex-direction:column;align-items:center;gap:2px;border:1px solid var(--line);background:#fff;color:var(--ink2);cursor:pointer;transition:.15s}
+.day .wk{font-size:9px}
+.day .dt{font-size:14px;font-weight:700;color:var(--ink)}
+.day .pr{font-size:8.5px;color:var(--sun-d)}
+.day .tag-mini{font-size:8px;color:var(--b600);margin-top:1px}
+.day.off{opacity:.4;cursor:not-allowed}
+.day.sel{background:linear-gradient(165deg,#1E8A6C,#0E6352);border-color:transparent;color:#fff;box-shadow:0 10px 18px -8px rgba(20,120,92,.6)}
+.day.sel .dt,.day.sel .wk,.day.sel .pr{color:#fff}
+.slotrow{display:flex;gap:8px;flex-wrap:wrap}
+.slot{flex:1;min-width:96px;border:1px solid var(--line);border-radius:13px;padding:8px 4px;text-align:center;cursor:pointer;background:#fff;transition:.15s}
+.slot .tm{font-size:12px;font-weight:700}
+.slot .rem{font-size:9px;color:var(--ink3);margin-top:2px}
+.slot.sel{background:var(--b50);border-color:var(--b500);box-shadow:0 0 0 1px var(--b500) inset}
+.slot.sel .tm{color:var(--b700)}
+.slot.full{opacity:.5;cursor:not-allowed}
+.prs{display:flex;flex-direction:column}
+.prow{display:flex;align-items:center;gap:11px;padding:9px 0}
+.prow+.prow{border-top:1px dashed var(--line)}
+.prow .ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-size:15px;flex:none}
+.prow .lb{flex:1}
+.prow .lb .n{font-size:13px;font-weight:600}
+.prow .lb .s{font-size:9.5px;color:var(--ink3);margin-top:1px}
+.prow .px{font-size:12.5px;font-weight:700;color:var(--ink)}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper .cnt{font-size:16px;font-weight:700;min-width:20px;text-align:center}
+.stepper .sm{width:27px;height:27px;border-radius:50%;border:1.4px solid var(--b500);color:var(--b600);background:#fff;display:grid;place-items:center;font-size:11px;cursor:pointer}
+.stepper .sm.off{opacity:.35}
+.stepper .sm.minus.on{background:var(--b600);color:#fff;border-color:var(--b600)}
+.fee-line{display:flex;justify-content:space-between;align-items:baseline;padding:4.5px 0;font-size:12px;color:var(--ink2)}
+.fee-line b{color:var(--ink);font-size:13px}
+.fee-line .gr{color:var(--jade);font-weight:600}
+.fee-total{border-top:1px dashed var(--line);margin-top:7px;padding-top:10px;display:flex;justify-content:space-between;align-items:baseline}
+.fee-total .l{font-size:11.5px;color:var(--ink2)}
+.fee-total .l small{display:block;color:var(--ink3);font-size:9.5px;margin-top:1px}
+.fee-total .v{font-size:23px;font-weight:800;color:var(--sun-d)}
+.insurance{margin-top:11px;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:14px;background:var(--b50);border:1px solid rgba(30,138,108,.1)}
+.insurance .ic{width:30px;height:30px;border-radius:10px;background:#fff;color:var(--b600);display:grid;place-items:center;font-size:14px}
+.insurance .n{font-size:11.5px;font-weight:600;color:var(--b800)}
+.insurance .s{font-size:9.5px;color:var(--ink3);margin-top:1px}
+.insurance .on-t{width:40px;height:22px;border-radius:999px;background:var(--b500);position:relative;margin-left:auto;cursor:pointer}
+.insurance .on-t::after{content:"";position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.bk-note{margin:0 20px;font-size:10px;color:var(--ink3);line-height:1.6;margin-top:10px}
+.bk-note i{color:var(--sun);margin-right:3px}
+.other-rec{margin:12px 0 0}
+.bk-foot{position:absolute;left:0;right:0;bottom:0;height:74px;background:rgba(255,255,255,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:14px;z-index:30}
+.bk-foot .tot .l{font-size:9.5px;color:var(--ink3)}
+.bk-foot .tot .v{font-size:22px;font-weight:800;color:var(--sun-d);line-height:1.15}
+.bk-foot .tot .v small{font-size:11px;color:var(--ink3);font-weight:500}
+.bk-foot .btn{height:48px;padding:0 30px;font-size:15px}
+
+/* ================================================================
+   支付确认
+================================================================ */
+.pay-bg{position:absolute;inset:0;background:linear-gradient(180deg,#EDF6F1 0%,#F3F8F5 40%,#EEF4EF 100%)}
+.pay-top{position:absolute;top:44px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;z-index:5}
+.pay-top .l{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;color:var(--b800)}
+.pay-top .l .fa{font-size:15px;color:var(--ink2)}
+.pay-amt{position:relative;z-index:2;text-align:center;margin:28px 0 4px}
+.pay-amt .k{font-size:11px;color:var(--ink3);letter-spacing:3px}
+.pay-amt .v{font-size:44px;font-weight:800;color:var(--ink);letter-spacing:-1px;margin-top:6px}
+.pay-amt .v small{font-size:22px;font-weight:700}
+.pay-amt .d{font-size:10px;color:var(--ink3);margin-top:6px}
+.pay-amt .d b{color:var(--jade)}
+.pay-order{position:relative;z-index:2;margin:14px 20px 0;padding:13px 15px}
+.order-p {display:flex;gap:12px;padding-bottom:12px;border-bottom:1px dashed var(--line)}
+.order-p .th{width:74px;height:74px;border-radius:15px;flex:none;overflow:hidden}
+.order-p .info{flex:1}
+.order-p .n{font-size:13.5px;font-weight:600;line-height:1.35}
+.order-p .sub{font-size:10px;color:var(--ink3);margin-top:4px;line-height:1.5}
+.order-p .px{font-size:15px;font-weight:700;color:var(--sun-d);text-align:right}
+.order-p .px small{font-size:9.5px;color:var(--ink3);font-weight:500}
+.pay-cols{display:grid;grid-template-columns:1fr 1fr;gap:0;padding:9px 2px}
+.pc{display:flex;align-items:center;gap:8px;padding:5px 2px}
+.pc .ik{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:13px}
+.pc .lb .k{font-size:9px;color:var(--ink3)}
+.pc .lb .v{font-size:11.5px;font-weight:600;margin-top:1px}
+.price-d{display:flex;flex-direction:column;gap:3px;padding:9px 2px;border-top:1px dashed var(--line)}
+.amt{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2)}
+.amt b{color:var(--ink)}
+.amt .free{color:var(--jade);font-weight:600}
+.countdown{position:relative;z-index:2;margin:10px 20px 0;display:flex;align-items:center;gap:8px;background:#FEF7EC;border:1px solid #F4DFC0;border-radius:14px;padding:9px 13px;font-size:11px;color:#A4631F}
+.countdown .fa{color:var(--sun)}
+.countdown b{font-weight:700;letter-spacing:1px}
+.method{position:relative;z-index:2;margin:10px 20px 0;padding:5px 15px}
+.m-row{display:flex;align-items:center;gap:12px;padding:11px 2px;cursor:pointer}
+.m-row+.m-row{border-top:1px solid #F1F6F3}
+.m-row .logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-size:17px;color:#fff;flex:none}
+.m-row.wx .logo{background:linear-gradient(135deg,#2FBF6C,#16A357)}
+.m-row.ali .logo{background:linear-gradient(135deg,#4C9BFF,#2B7DE9)}
+.m-row .n{font-size:13.5px;font-weight:600}
+.m-row .s{font-size:9.5px;color:var(--ink3);margin-top:1px}
+.m-row .right{margin-left:auto;display:flex;align-items:center;gap:7px;font-size:9px;color:var(--ink3)}
+.m-row .dot{width:19px;height:19px;border-radius:50%;border:1.6px solid var(--line);display:grid;place-items:center;font-size:10px;color:#fff}
+.m-row.sel .dot{background:var(--jade);border-color:var(--jade)}
+.secure{position:relative;z-index:2;margin:10px 20px;font-size:9.5px;color:var(--ink3);text-align:center;letter-spacing:.5px}
+.pay-foot{position:absolute;left:0;right:0;bottom:0;height:78px;background:rgba(255,255,255,.97);border-top:1px solid var(--line);display:flex;align-items:center;padding:0 20px;gap:12px;z-index:20}
+.pay-foot .tips{font-size:9.5px;color:var(--ink3);line-height:1.5}
+.pay-foot .btn{height:50px;flex:1;font-size:16px;letter-spacing:4px}
+.pay-foot .btn small{font-size:11px;letter-spacing:1px;font-weight:500}
+/* 支付成功 overlay */
+.pay-ok{position:absolute;inset:0;z-index:80;display:none;flex-direction:column;align-items:center;justify-content:flex-start;padding:116px 24px 0;background:rgba(255,255,255,.92);backdrop-filter:blur(8px)}
+.pay-ok.show{display:flex}
+.pay-ok .ring{width:76px;height:76px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(150deg,#31B077,#1E8A6C);color:#fff;font-size:34px;box-shadow:0 20px 40px -16px rgba(30,138,108,.6);animation:fadeUp .5s both}
+.pay-ok .ring::before{content:"";width:28px;height:16px;border-left:6px solid #fff;border-bottom:6px solid #fff;transform:rotate(-45deg);margin-top:-4px}
+.pay-ok h3{font-size:20px;font-weight:700;margin-top:16px}
+.pay-ok .sub{font-size:11px;color:var(--ink2);margin-top:7px;text-align:center;line-height:1.7}
+.pay-ok .sub b{color:var(--b700)}
+.pay-ok .btn{position:absolute;left:30px;right:30px;bottom:96px;height:50px}
+.ticket{width:100%;margin-top:18px;border-radius:22px;background:#fff;border:1px solid rgba(30,138,108,.1);box-shadow:0 18px 36px -20px rgba(9,59,48,.35);overflow:hidden;animation:fadeUp .5s .12s both}
+.ticket-h{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;background:linear-gradient(135deg,var(--b700),var(--b500));color:#fff}
+.ticket-h .n{font-size:14px;font-weight:700}
+.ticket-h .s{font-size:9.5px;opacity:.82;margin-top:2px}
+.ticket-h .code{font-size:10px;border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:3px 8px}
+.ticket-b{display:grid;grid-template-columns:1fr 82px;gap:12px;padding:14px 16px}
+.ticket-info{display:grid;grid-template-columns:1fr 1fr;gap:9px 12px}
+.ticket-info .k{font-size:9px;color:var(--ink3);letter-spacing:.5px}
+.ticket-info .v{font-size:12px;color:var(--ink);font-weight:700;margin-top:2px;line-height:1.35}
+.qr{width:82px;height:82px;border-radius:14px;background:repeating-linear-gradient(45deg,#102E27 0 5px,#fff 5px 10px);border:6px solid #fff;box-shadow:0 0 0 1px var(--line);position:relative}
+.qr::after{content:"";position:absolute;inset:25px;background:#fff;border:5px solid #102E27}
+.ticket-note{padding:10px 16px 13px;border-top:1px dashed var(--line);font-size:10px;color:var(--ink2);line-height:1.6;background:#FBFDFB}
+
+/* ================================================================
+   AR 汉文化
+================================================================ */
+.ar-stage{position:absolute;top:0;left:0;right:0;height:372px;overflow:hidden;
+  background:linear-gradient(165deg,#0A3B30 0%,#0E5C46 40%,#177A5A 78%,#21916B 100%)}
+.ar-stage .mesh{position:absolute;inset:0;background-image:linear-gradient(rgba(220,255,240,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(220,255,240,.05) 1px,transparent 1px);background-size:30px 30px}
+.ar-stage .hanque{position:absolute;left:50%;top:64px;transform:translateX(-50%);width:150px;opacity:.95}
+.ar-halo{position:absolute;left:50%;top:118px;width:170px;height:170px;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(246,224,173,.28),transparent 62%);filter:blur(2px)}
+.ar-nav{position:absolute;top:44px;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:6px 16px;z-index:6}
+.ar-nav .ic{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.24);display:grid;place-items:center;color:#fff;font-size:15px}
+.ar-nav .ttl{color:#fff;font-size:14px;letter-spacing:3px;font-weight:600}
+.ar-progress-wrap{position:absolute;left:20px;right:20px;top:330px;z-index:5}
+.ar-progress-wrap .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden}
+.ar-progress-wrap .bar i{display:block;height:100%;width:68%;border-radius:3px;background:linear-gradient(90deg,#F2C378,#E8A94E);transition:width 1.2s}
+.ar-ptext{display:flex;justify-content:space-between;font-size:10px;color:#D6EFE4;margin-top:6px;letter-spacing:1px}
+.ar-body{position:absolute;top:372px;bottom:62px;left:0;right:0;overflow-y:auto;padding:14px 20px 20px;background:linear-gradient(180deg,#F1F7F3,var(--canvas) 40px)}
+.ar-tip-cam{position:absolute;left:50%;top:238px;transform:translateX(-50%);z-index:5;width:236px;text-align:center;color:#DFF3EA;font-size:11px;letter-spacing:2px}
+.task-prog{margin-top:-0px}
+.tp-card{padding:14px 16px}
+.tp-head{display:flex;align-items:center;gap:11px}
+.tp-head .ic{width:38px;height:38px;border-radius:13px;background:linear-gradient(150deg,#3FA586,#14785C);color:#fff;display:grid;place-items:center;font-size:16px;flex:none;box-shadow:0 8px 16px -8px rgba(20,120,92,.6)}
+.tp-head .n{font-size:13px;font-weight:700}
+.tp-head .s{font-size:9.5px;color:var(--ink3);margin-top:2px}
+.tp-head .rt{margin-left:auto;text-align:right}
+.tp-head .rt b{color:var(--b700);font-size:15px}
+.tp-head .rt span{color:var(--ink3);font-size:11px}
+.tp-prog{height:7px;border-radius:4px;background:var(--b100);margin-top:11px;overflow:hidden}
+.tp-prog i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,#1E8A6C,#3FA586)}
+.badge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.badge{background:#fff;border:1px solid rgba(30,138,108,.07);border-radius:18px;padding:13px 6px 11px;text-align:center;box-shadow:0 8px 20px -16px rgba(20,120,92,.25)}
+.badge .r{width:42px;height:42px;border-radius:50%;margin:0 auto 7px;display:grid;place-items:center;font-size:17px;color:#fff}
+.badge.done .r{background:linear-gradient(150deg,#E9B54E,#CE8F2A);box-shadow:0 8px 16px -8px rgba(206,143,42,.7)}
+.badge.cur .r{background:linear-gradient(150deg,#3FA586,#14785C);box-shadow:0 8px 16px -8px rgba(20,120,92,.6)}
+.badge.lock .r{background:#E7EFEA;color:#B4C6BC}
+.badge .n{font-size:10.5px;font-weight:600}
+.badge .s{font-size:8.5px;color:var(--ink3);margin-top:3px}
+.guide{margin-top:12px;display:flex;align-items:center;gap:12px;padding:13px 15px;border-radius:18px;background:linear-gradient(120deg,#FDF3E3,#FAE6CB);border:1px solid #F2D9AE}
+.guide .av{width:46px;height:46px;border-radius:50%;flex:none;background:linear-gradient(150deg,#EFA550,#CE7627);color:#fff;display:grid;place-items:center;font-size:19px;box-shadow:0 8px 16px -8px rgba(206,118,39,.7)}
+.guide .n{font-size:13px;font-weight:700;color:#7C4A14}
+.guide .s{font-size:9.5px;color:#A0783F;margin-top:2px}
+.guide .star{margin-top:3px;font-size:10px;color:#CE7627;font-weight:600}
+.guide .star .fa{color:var(--gold)}
+.guide .btn{margin-left:auto}
+
+/* ================================================================
+   智能导览地图
+================================================================ */
+.m-top{position:absolute;top:44px;left:0;right:0;padding:6px 16px;display:flex;gap:9px;z-index:20}
+.m-search{flex:1;height:42px;background:#fff;border-radius:999px;display:flex;align-items:center;gap:8px;padding:0 15px;font-size:11.5px;color:var(--ink3);box-shadow:0 10px 22px -12px rgba(20,120,92,.4);border:1px solid rgba(30,138,108,.08)}
+.m-search .fa{color:var(--b500);font-size:13px}
+.m-layer{width:42px;height:42px;border-radius:14px;background:#fff;display:grid;place-items:center;color:var(--b700);font-size:15px;box-shadow:0 10px 22px -12px rgba(20,120,92,.4)}
+.m-filter{position:absolute;top:100px;left:16px;right:16px;z-index:19;display:flex;gap:6px}
+.m-filter .f{flex:none;padding:6px 13px;border-radius:999px;background:rgba(255,255,255,.94);font-size:10px;font-weight:600;color:var(--ink2);box-shadow:0 6px 14px -8px rgba(20,120,92,.4);border:1px solid rgba(30,138,108,.06)}
+.m-filter .f.on{background:var(--b700);color:#fff}
+.mapview{position:absolute;top:0;bottom:232px;left:0;right:0;overflow:hidden;background:linear-gradient(180deg,#EAF3E9,#E3F0E4 60%,#E6F0E0)}
+.mapview svg{position:absolute;top:44px;left:0;width:390px;height:420px}
+.m-pos{position:absolute;z-index:22}
+.m-me{left:258px;top:356px}
+.m-pulse{position:absolute;width:46px;height:46px;border-radius:50%;border:2px solid rgba(212,87,79,.5);animation:pulse 2s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.5);opacity:.9}100%{transform:scale(1.7);opacity:0}}
+.m-loc{position:absolute;left:244px;top:340px;width:28px;height:28px;background:#fff;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 0 5px rgba(255,255,255,.5);color:#D4574F;font-size:12px;z-index:23}
+.m-note{position:absolute;left:220px;top:388px;z-index:24;background:rgba(255,255,255,.92);font-size:9.5px;color:var(--b700);padding:3px 9px;border-radius:999px;font-weight:600;box-shadow:0 4px 10px -4px rgba(0,0,0,.18)}
+.m-scale{position:absolute;left:16px;top:140px;z-index:21;background:rgba(255,255,255,.86);border-radius:12px;padding:8px 10px;box-shadow:0 6px 16px -10px rgba(20,120,92,.5);font-size:9px;color:var(--ink2)}
+.m-scale .lg{display:flex;flex-direction:column;gap:4px}
+.m-scale .lg .l{display:flex;align-items:center;gap:6px}
+.m-scale .d{width:9px;height:9px;border-radius:3px;flex:none}
+.m-card{position:absolute;left:16px;right:16px;bottom:78px;background:#fff;border-radius:22px;box-shadow:0 18px 40px -18px rgba(9,59,48,.4);z-index:25;overflow:hidden;border:1px solid rgba(30,138,108,.06)}
+.mc-head{padding:14px 16px 8px;display:flex;align-items:center;justify-content:space-between}
+.mc-head .t{font-size:15px;font-weight:700}
+.mc-head .t small{font-size:10px;color:var(--ink3);font-weight:400;margin-left:3px}
+.mc-head .st{font-size:10px;color:var(--jade);font-weight:600;background:var(--jade-bg);padding:3px 9px;border-radius:999px}
+.m-stops{display:flex;gap:9px;padding:6px 16px 10px}
+.m-stop{flex:1;position:relative;text-align:center;cursor:pointer}
+.m-stop .n{font-size:10px;font-weight:600;color:var(--ink2);margin-top:6px;line-height:1.3}
+.m-stop .d{font-size:8.5px;color:var(--ink3);margin-top:1px}
+.m-stop.on .n{color:var(--b700)}
+.m-line{display:flex;align-items:center}
+.m-dot{width:11px;height:11px;border-radius:50%;border:2.5px solid var(--b400);background:#fff;flex:none}
+.m-stop.on .m-dot{background:var(--b600);border-color:var(--b600);box-shadow:0 0 0 4px rgba(30,138,108,.16)}
+.m-line .seg{flex:1;height:2px;background:var(--b300);border-radius:2px;position:relative}
+.m-line .seg::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#fff 0 4px,transparent 4px 8px)}
+.mc-foot{padding:11px 16px 13px;border-top:1px solid var(--line);display:flex;align-items:center;gap:12px;background:#FBFDFB}
+.mc-foot .info{flex:1;font-size:10px;color:var(--ink2);line-height:1.6}
+.mc-foot .info b{color:var(--ink);font-size:11px}
+.mc-foot .btn{height:42px;padding:0 20px;font-size:13px}
+.m-tabs{position:absolute;left:0;right:0;bottom:0;height:62px;background:rgba(255,255,255,.95);border-top:1px solid var(--line);display:flex;z-index:70}
+body.shot *,body.shot *::before,body.shot *::after{animation:none!important;transition:none!important}
+body.shot .stagger>*{opacity:1!important;transform:none!important}
+</style>
+</head>
+<body>
+
+<!-- ================================================================ 首页 -->
+<section class="screen active" id="sc-home">
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="ic-right"><i class="fa fa-signal"></i><i class="fa fa-wifi"></i><i class="fa fa-battery-full"></i></span>
+  </div>
+
+  <!-- 天空 -->
+  <div class="h-sky">
+    <div class="sun"></div>
+    <svg viewBox="0 0 390 190" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="m1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9D9C6"/><stop offset="1" stop-color="#CFE7D5"/></linearGradient>
+        <linearGradient id="m2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8DBFA6"/><stop offset="1" stop-color="#A9CDB2"/></linearGradient>
+      </defs>
+      <!-- 远山 -->
+      <path d="M0 128 L52 84 L104 132 L150 96 L204 138 L258 88 L320 130 L390 102 L390 190 L0 190 Z" fill="url(#m1)"/>
+      <!-- 村落丘 + 汉阙剪影 -->
+      <path d="M0 190 L0 142 C48 128 92 150 140 138 C196 124 246 152 300 136 C332 126 366 140 390 132 L390 190 Z" fill="url(#m2)"/>
+      <g fill="#E4F0E8">
+        <rect x="44" y="128" width="9" height="17" rx="2"/>
+        <rect x="57" y="124" width="11" height="21" rx="2"/>
+        <rect x="71" y="129" width="8" height="16" rx="2"/>
+        <rect x="150" y="132" width="10" height="18" rx="2"/>
+      </g>
+      <!-- 汉阙古塔（文化剪影） -->
+      <g transform="translate(312,96)" fill="#7FB296" opacity=".85">
+        <path d="M14 20 L30 4 L46 20 Z"/>
+        <rect x="16" y="20" width="28" height="8" rx="1.5"/>
+        <path d="M12 28 L48 28 L46 40 L14 40 Z"/>
+        <rect x="20" y="40" width="20" height="12" rx="1.5"/>
+        <path d="M16 52 L44 52 L42 66 L18 66 Z" opacity=".9"/>
+      </g>
+      <!-- 飞鸟 -->
+      <path d="M84 46 q6 -6 13 -1 q-4 -3 -8 -4 q6 1 9 5 q-3 -1 -5 -1 q4 6 -2 9 q-4 -5 -7 -8 z" fill="#6FA98C" opacity=".85"/>
+      <path d="M104 60 q5 -5 11 -1 q-3 -2 -7 -3 q5 1 8 4 q-3 0 -4 0 q3 5 -1 8 q-4 -5 -7 -7 z" fill="#7FB89A" opacity=".8"/>
+    </svg>
+  </div>
+
+  <div class="h-brand">
+    <div class="seal"><i class="fa fa-paper-plane-o"></i></div>
+    <div>
+      <div class="nm kai">飞鸟驿乡</div>
+      <div class="slogan">樊寨 · 汉韵 · 低空文旅</div>
+    </div>
+  </div>
+  <div class="h-right">
+    <div class="h-loc"><i class="fa fa-map-marker"></i>西安市 · 空港新城 樊寨村<i class="fa fa-angle-down" style="font-size:9px;opacity:.6"></i></div>
+    <div class="h-weather"><i class="fa fa-sun-o" style="color:#E8943A"></i>晴 27°C</div>
+  </div>
+
+  <div class="h-search stagger">
+    <i class="fa fa-search"></i>
+    <input placeholder="搜索低空体验、汉文化点位、农家食宿">
+    <span class="fl"><i class="fa fa-plane"></i>今日可飞</span>
+  </div>
+
+  <!-- 主推：低空巡游 -->
+  <div class="h-banner stagger">
+    <div class="art">
+      <svg viewBox="0 0 346 156" preserveAspectRatio="xMidYMid slice" width="346" height="156">
+        <defs>
+          <linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#178C6C"/><stop offset="1" stop-color="#0C5345"/></linearGradient>
+          <linearGradient id="hillg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C8F70"/><stop offset="1" stop-color="#0E5C48"/></linearGradient>
+          <linearGradient id="terr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3F9C6E"/><stop offset="1" stop-color="#B6D7A2"/></linearGradient>
+        </defs>
+        <rect width="346" height="156" fill="url(#skyg)"/>
+        <circle cx="286" cy="40" r="22" fill="#F7DFAC" opacity=".9"/>
+        <circle cx="286" cy="40" r="15" fill="#FFE9B6"/>
+        <path d="M0 132 L60 84 L120 128 L190 92 L250 134 L346 108 L346 156 L0 156 Z" fill="#2C8F70" opacity=".7"/>
+        <path d="M0 156 L0 150 L80 126 C140 118 200 130 260 122 L346 134 L346 156 Z" fill="#1E7A5E" opacity=".85"/>
+        <path d="M0 156 L0 158 L120 142 L220 152 L346 146 L346 156 Z" fill="#0E5C48"/>
+        <g fill="#0E5C48" opacity=".9">
+          <path d="M240 128 q12 -12 24 0 q-11 -7 -24 0 Z"/>
+          <path d="M250 116 q9 -9 18 0 q-8 -6 -18 0 Z"/>
+        </g>
+        <path d="M30 40 q6 -6 12 0 q-5 -4 -12 0 Z" fill="#9ED4B4" opacity=".8"/>
+        <path d="M52 30 q5 -5 10 0 q-4 -3 -10 0 Z" fill="#9ED4B4" opacity=".6"/>
+      </svg>
+    </div>
+    <div class="glass"></div>
+    <div class="info">
+      <div class="tagrow"><span>低空观光 · 空港起降</span><span>安全认证</span></div>
+      <h3 class="kai">「空中瞰樊寨」直升巡游</h3>
+      <div class="sub">低空起飞 · 巡航 300m · 25 分钟 · 摄影师随拍</div>
+    </div>
+    <div class="bookrow">
+      <div class="price"><b>¥298</b> 起/人</div>
+      <button class="btn btn-sun" onclick="go('booking')">查班次 预订</button>
+    </div>
+  </div>
+
+  <!-- 双通道 -->
+  <div class="chans stagger">
+    <div class="chan chan-a" onclick="go('booking')">
+      <div class="ic"><i class="fa fa-paper-plane-o"></i></div>
+      <div class="big">低空观光</div>
+      <div class="sml">直升机 · 热气球 · 无人机航拍</div>
+      <div class="cta">今日 6 个班次 <i class="fa fa-angle-right"></i></div>
+    </div>
+    <div class="chan chan-b" onclick="go('ar')">
+      <div class="ic"><i class="fa fa-camera-retro"></i></div>
+      <div class="big">汉文化寻迹</div>
+      <div class="sml">汉阙 · 碑文 · 节气田园 · AR</div>
+      <div class="cta">3/5 处已解锁 <i class="fa fa-angle-right"></i></div>
+    </div>
+  </div>
+
+  <div class="h-sec stagger">
+    <div class="t">樊寨人气好物</div>
+    <div class="m">全部 <i class="fa fa-angle-right"></i></div>
+  </div>
+  <div class="recs stagger">
+    <div class="rec" onclick="go('booking')">
+      <div class="th"><span class="tag">低空</span><svg class="rec-th t1" viewBox="0 0 142 76"></svg></div>
+      <div class="bd">
+        <div class="n">直升机空中巡游</div>
+        <div class="meta"><i class="fa fa-star"></i>4.9 · 已飞 3,286</div>
+        <div class="price"><b>¥298</b><span> 起/人</span></div>
+      </div>
+    </div>
+    <div class="rec" onclick="go('ar')">
+      <div class="th"><span class="tag">AR寻迹</span><svg class="rec-th t3" viewBox="0 0 142 76"></svg></div>
+      <div class="bd">
+        <div class="n">汉阙古塔 AR 寻迹</div>
+        <div class="meta"><i class="fa fa-star"></i>4.8 · 2,104 人探索</div>
+        <div class="price"><b style="color:var(--jade)">免费</b><span> 开放</span></div>
+      </div>
+    </div>
+    <div class="rec">
+      <div class="th"><span class="tag">乡宴</span><svg class="rec-th t2" viewBox="0 0 142 76"></svg></div>
+      <div class="bd">
+        <div class="n">樊寨汉宴双人餐</div>
+        <div class="meta"><i class="fa fa-star"></i>4.7 · 867 份</div>
+        <div class="price"><b>¥168</b><span> 起</span></div>
+      </div>
+    </div>
+    <div class="rec">
+      <div class="th"><span class="tag">民宿</span><svg class="rec-th t4" viewBox="0 0 142 76"></svg></div>
+      <div class="bd">
+        <div class="n">汉风小院 · 观星房</div>
+        <div class="meta"><i class="fa fa-star"></i>4.9 · 528 间夜</div>
+        <div class="price"><b>¥368</b><span> 晚</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="h-foot">飞鸟驿乡 · 让樊寨被看见</div>
+
+  <nav class="tabbar">
+    <div class="tab on"><div class="ic"><i class="fa fa-home"></i></div><span>首页</span></div>
+    <div class="tab" onclick="go('booking')"><div class="ic"><i class="fa fa-plane"></i></div><span>预约</span></div>
+    <div class="tab" onclick="go('ar')"><div class="ic"><i class="fa fa-camera-retro"></i></div><span>寻迹</span></div>
+    <div class="tab" onclick="go('map')"><div class="ic"><i class="fa fa-map-o"></i></div><span>导览</span></div>
+  </nav>
+</section>
+
+<!-- ================================================================ 低空预约 -->
+<section class="screen" id="sc-booking">
+  <div class="bk-top">
+    <div class="sun"></div>
+    <svg class="towers" viewBox="0 0 390 238" preserveAspectRatio="xMidYMid slice" width="390" height="238">
+      <path d="M0 238 L0 176 L60 128 L130 186 L210 140 L290 196 L390 156 L390 238 Z" fill="#B7D9C6" opacity=".5"/>
+      <path d="M0 238 L0 206 L90 172 L190 214 L300 178 L390 206 L390 238 Z" fill="#87B99E" opacity=".5"/>
+      <g fill="#E7F2EA" opacity=".6"><path d="M70 116 q10 -10 20 0 q-9 -6 -20 0 Z"/><path d="M88 100 q8 -8 16 0 q-7 -5 -16 0 Z"/><path d="M292 92 q9 -9 18 0 q-8 -5 -18 0 Z"/><path d="M52 142 q8 -8 16 0 q-7 -5 -16 0 Z"/></g>
+    </svg>
+    <div class="bk-nav">
+      <div class="ic" onclick="go('home')"><i class="fa fa-angle-left"></i></div>
+      <div class="ttl kai">低空观光预约</div>
+      <div class="r"><div class="ic"><i class="fa fa-shield"></i></div><div class="ic"><i class="fa fa-ellipsis-v"></i></div></div>
+    </div>
+    <svg class="bk-craft" viewBox="0 0 200 120">
+      <defs><linearGradient id="blade" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D9B26A"/><stop offset="1" stop-color="#F0D9A4"/></linearGradient>
+      <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2C784"/><stop offset="1" stop-color="#D89A4E"/></linearGradient></defs>
+      <path d="M10 26 q20 -8 44 -4" stroke="#F0D9A4" stroke-width="3" fill="none" opacity=".9"/>
+      <path d="M190 24 q-30 -10 -60 -2" stroke="#F0D9A4" stroke-width="3" fill="none" opacity=".9"/>
+      <rect x="62" y="16" width="76" height="6" rx="3" fill="#E8CD8F" opacity=".7"/>
+      <path d="M40 40 h122 l-8 40 q-6 10 -22 10 h-62 q-16 0 -22 -10 Z" fill="url(#body)" stroke="#B9823A" stroke-width="1.5"/>
+      <path d="M84 52 h34 v14 h-34 Z" fill="#FFF2D4" opacity=".8" rx="2"/>
+      <ellipse cx="96" cy="42" rx="8" ry="9" fill="#B9823A" opacity=".6"/>
+      <rect x="60" y="90" width="8" height="22" fill="#D89A4E"/><rect x="134" y="90" width="8" height="22" fill="#D89A4E"/>
+      <path d="M56 116 q30 10 90 0" stroke="#F0D9A4" stroke-width="2" fill="none" opacity=".6"/>
+    </svg>
+    <div class="bk-head">
+      <div class="tags"><span>飞鸟驿乡自营</span><span>空港起降</span><span>可改签</span></div>
+      <h2 class="kai">樊寨村 · 直升机空中巡游</h2>
+      <div class="rate"><i class="fa fa-star"></i><b>4.9</b>&nbsp;· 已飞 3,286 &nbsp;|&nbsp; 25 分钟 &nbsp;·&nbsp; 巡航 300m &nbsp;·&nbsp; 拼机出行</div>
+    </div>
+  </div>
+
+  <div class="bk-body">
+    <div class="info-strip">
+      <div class="it"><div class="k">起降场</div><div class="v"><i class="fa fa-circle" style="font-size:6px"></i> 樊寨低空驿站</div></div>
+      <div class="it"><div class="k">班次</div><div class="v">今日 6 班</div></div>
+      <div class="it"><div class="k">保险</div><div class="v">含航意险</div></div>
+    </div>
+
+    <div class="pad">
+      <div class="card">
+        <div class="sct"><div class="t">选择乘机日期</div><div class="s"><i class="fa fa-calendar" style="color:var(--sun)"></i> 约满置灰 · 支持免费改签</div></div>
+        <div class="dayrow" id="dayrow"></div>
+      </div>
+
+      <div class="card">
+        <div class="sct"><div class="t">选择班次</div><div class="s">黄金时段更抢手</div></div>
+        <div class="slotrow">
+          <div class="slot sel"><div class="tm">09:00</div><div class="rem">余 6 席 · 晨曦</div></div>
+          <div class="slot"><div class="tm">11:30</div><div class="rem">余 4 席</div></div>
+          <div class="slot"><div class="tm">14:00</div><div class="rem">余 2 席</div></div>
+          <div class="slot"><div class="tm">16:30</div><div class="rem">余 5 席 · 夕阳</div></div>
+          <div class="slot full"><div class="tm">18:00</div><div class="rem">已约满</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sct"><div class="t">乘机人数</div><div class="s">拼机出行 · 儿童需成人陪同</div></div>
+        <div class="prs">
+          <div class="prow">
+            <div class="ic" style="background:var(--b100);color:var(--b700)"><i class="fa fa-user-o"></i></div>
+            <div class="lb"><div class="n">成人</div><div class="s">12 岁及以上</div></div>
+            <div class="px">¥298/人</div>
+            <div class="stepper"><div class="sm minus on" onclick="step('ad',-1)"><i class="fa fa-minus"></i></div><div class="cnt" id="ad-cnt">2</div><div class="sm" onclick="step('ad',1)"><i class="fa fa-plus"></i></div></div>
+          </div>
+          <div class="prow">
+            <div class="ic" style="background:#F1EBF9;color:#8A6FB8"><i class="fa fa-child"></i></div>
+            <div class="lb"><div class="n">儿童</div><div class="s">4-12 岁 · 半价座</div></div>
+            <div class="px" id="ch-price">¥149/人</div>
+            <div class="stepper"><div class="sm minus" onclick="step('ch',-1)"><i class="fa fa-minus"></i></div><div class="cnt" id="ch-cnt">0</div><div class="sm" onclick="step('ch',1)"><i class="fa fa-plus"></i></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="sct"><div class="t">费用明细</div><div class="s">平台统一结算</div></div>
+        <div id="fee-lines"></div>
+        <div class="insurance">
+          <div class="ic"><i class="fa fa-shield"></i></div>
+          <div><div class="n">低空意外险（免费赠送）</div><div class="s">航程全时段保障，保额 ¥100 万</div></div>
+          <div class="on-t"></div>
+        </div>
+        <div class="fee-total"><div class="l">合计 <small>已含 首飞立减 ¥50</small></div><div class="v num" id="fee-total">¥596</div></div>
+      </div>
+
+      <div class="bk-note"><i class="fa fa-info-circle"></i>乘机需携带有效身份证件，请提前 20 分钟抵达「樊寨低空驿站」安检候机；如遇空域管制平台将自动改签或全额退款。</div>
+    </div>
+  </div>
+
+  <div class="bk-foot">
+    <div class="tot"><div class="l">共 <b id="foot-cnt">2</b> 人 · 已优惠 ¥50</div><div class="v num" id="foot-total">¥596</div></div>
+    <button class="btn btn-sun" onclick="go('pay')">去支付</button>
+  </div>
+</section>
+
+<!-- ================================================================ 支付确认 -->
+<section class="screen" id="sc-pay">
+  <div class="pay-bg"></div>
+  <div class="pay-top">
+    <div class="l"><i class="fa fa-angle-left"></i>确认订单</div>
+    <div class="l" style="color:var(--ink3);font-size:12px">订单支付倒计时</div>
+  </div>
+
+  <div class="pay-amt">
+    <div class="k">应 付 金 额</div>
+    <div class="v num"><small>¥</small>546</div>
+    <div class="d">首飞立减 <b>¥50</b> · 已优惠</div>
+  </div>
+
+  <div class="card pay-order">
+    <div class="order-p">
+      <div class="th"><svg class="rec-th t1" viewBox="0 0 74 74"></svg></div>
+      <div class="info">
+        <div class="n">樊寨村 · 直升机空中巡游</div>
+        <div class="sub">2026-09-05（周六）09:00 班次 · 晨曦场</div>
+        <div class="sub">成人 ×2 · 儿童 ×0</div>
+      </div>
+      <div class="px">¥546<small> 已减 ¥50 · 含航意险</small></div>
+    </div>
+    <div class="pay-cols">
+      <div class="pc"><div class="ik" style="background:var(--b100);color:var(--b700)"><i class="fa fa-plane"></i></div><div class="lb"><div class="k">乘机人</div><div class="v">宋**、李**</div></div></div>
+      <div class="pc"><div class="ik" style="background:var(--sun-50);color:var(--sun-d)"><i class="fa fa-tag"></i></div><div class="lb"><div class="k">购票券</div><div class="v">首飞立减 ¥50</div></div></div>
+      <div class="pc"><div class="ik" style="background:#E1F3E9;color:var(--jade)"><i class="fa fa-shield"></i></div><div class="lb"><div class="k">保险</div><div class="v">航意险 ×2 已含</div></div></div>
+      <div class="pc"><div class="ik" style="background:#F4ECF9;color:#8A6FB8"><i class="fa fa-map-marker"></i></div><div class="lb"><div class="k">起降点</div><div class="v">樊寨低空驿站</div></div></div>
+    </div>
+    <div class="price-d">
+      <div class="amt"><span>直升机巡游 ×2</span><b>¥596</b></div>
+      <div class="amt"><span>首飞立减券</span><span class="free">-¥50</span></div>
+      <div class="amt"><span>随机立减（平台活动）</span><b>¥0</b></div>
+    </div>
+  </div>
+
+  <div class="countdown"><i class="fa fa-hourglass-half"></i>请在 <b id="cd">14:59</b> 内完成支付，超时订单将自动取消</div>
+
+  <div class="card method">
+    <div class="m-row wx sel">
+      <div class="logo"><i class="fa fa-weixin"></i></div>
+      <div><div class="n">微信支付</div><div class="s">推荐 · 9.5 亿用户常用</div></div>
+      <div class="right"><span>已绑定</span><div class="dot"><i class="fa fa-check"></i></div></div>
+    </div>
+    <div class="m-row ali">
+      <div class="logo"><i class="fa fa-alipay"></i></div>
+      <div><div class="n">支付宝</div><div class="s">花呗可用</div></div>
+      <div class="right"><span></span><div class="dot"></div></div>
+    </div>
+  </div>
+
+  <div class="secure"><i class="fa fa-lock"></i>&nbsp;银联安全支付 · 信息已加密</div>
+
+  <div class="pay-foot">
+    <div class="tips">实付金额<br><b style="color:var(--sun-d);font-size:18px" class="num">¥546</b></div>
+    <button class="btn btn-sun" onclick="payOk()">确认支付</button>
+  </div>
+
+  <div class="pay-ok" id="pay-ok">
+    <div class="ring"></div>
+    <h3>支付成功</h3>
+    <div class="sub">已生成电子登机凭证，请提前 20 分钟到场<br>前往「我的订单」查看 <b>樊寨直升机巡游</b></div>
+    <div class="ticket">
+      <div class="ticket-h">
+        <div><div class="n">电子登机凭证</div><div class="s">樊寨低空驿站核销使用</div></div>
+        <div class="code">FNZ-0905-0018</div>
+      </div>
+      <div class="ticket-b">
+        <div class="ticket-info">
+          <div><div class="k">班次</div><div class="v">09:00 晨曦场</div></div>
+          <div><div class="k">人数</div><div class="v">成人 2 人</div></div>
+          <div><div class="k">起降点</div><div class="v">樊寨低空驿站</div></div>
+          <div><div class="k">安检</div><div class="v">08:40 前到场</div></div>
+        </div>
+        <div class="qr"></div>
+      </div>
+      <div class="ticket-note">天气或空域管制自动改签/退款。起飞前可免费改签 1 次。</div>
+    </div>
+    <button class="btn btn-sun" onclick="go('home')">完成</button>
+  </div>
+</section>
+
+<!-- ================================================================ AR 汉文化 -->
+<section class="screen" id="sc-ar">
+  <div class="ar-stage">
+    <div class="mesh"></div>
+    <div class="ar-halo"></div>
+    <div class="hanque">
+      <svg viewBox="0 0 150 218" width="150" height="218">
+        <defs>
+          <linearGradient id="tw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8FBF9E"/><stop offset="1" stop-color="#4E8A68"/></linearGradient>
+          <linearGradient id="tw2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C7E2CE"/><stop offset="1" stop-color="#7FB296"/></linearGradient>
+        </defs>
+        <circle cx="75" cy="14" r="8" fill="#E8C98A"/>
+        <path d="M75 20 L120 62 L30 62 Z" fill="url(#tw2)"/>
+        <rect x="40" y="60" width="70" height="18" rx="4" fill="#C7E2CE"/>
+        <rect x="70" y="34" width="9" height="26" fill="#E8C98A"/>
+        <path d="M75 72 L116 118 L34 118 Z" fill="url(#tw)"/>
+        <rect x="42" y="116" width="66" height="16" rx="4" fill="#C7E2CE"/>
+        <rect x="70" y="90" width="9" height="28" fill="#E8C98A" opacity=".9"/>
+        <path d="M75 132 L108 166 L42 166 Z" fill="url(#tw)"/>
+        <rect x="32" y="166" width="86" height="22" rx="5" fill="#C7E2CE"/>
+        <path d="M24 190 L126 190 L120 200 L30 200 Z" fill="#4E8A68" opacity=".85"/>
+        <rect x="46" y="70" width="12" height="12" rx="2" fill="#DFF0E4"/>
+        <rect x="94" y="70" width="12" height="12" rx="2" fill="#DFF0E4"/>
+        <rect x="54" y="124" width="10" height="10" rx="2" fill="#DFF0E4"/>
+        <rect x="86" y="124" width="10" height="10" rx="2" fill="#DFF0E4"/>
+        <circle cx="48" cy="184" r="3.5" fill="#E8C98A"/>
+        <circle cx="102" cy="184" r="3.5" fill="#E8C98A"/>
+      </svg>
+    </div>
+    <div class="ar-nav">
+      <div class="ic" onclick="go('home')"><i class="fa fa-angle-left"></i></div>
+      <div class="ttl kai">汉文化寻迹</div>
+      <div class="ic"><i class="fa fa-camera"></i></div>
+    </div>
+    <div class="ar-tip-cam" id="ar-tip">正在识别「汉阙古塔」东汉遗址 · 请对准塔身</div>
+    <div class="ar-progress-wrap">
+      <div class="bar"><i id="ar-bar"></i></div>
+      <div class="ar-ptext"><span id="ar-pct">识别中 68%</span><span>已加载 3D 复原模型</span></div>
+    </div>
+  </div>
+
+  <div class="ar-body">
+    <div class="card tp-card">
+      <div class="tp-head">
+        <div class="ic"><i class="fa fa-trophy"></i></div>
+        <div><div class="n">汉文化探索 · 樊寨五印</div><div class="s">到访点位扫码，集齐印章兑礼</div></div>
+        <div class="rt"><b class="num">3</b><span>/ 5</span></div>
+      </div>
+      <div class="tp-prog"><i style="width:60%"></i></div>
+    </div>
+
+    <div class="badge-row">
+      <div class="badge done"><div class="r"><i class="fa fa-university"></i></div><div class="n">汉阙寻踪</div><div class="s">已解锁 · 09:12</div></div>
+      <div class="badge cur"><div class="r"><i class="fa fa-font"></i></div><div class="n">碑文解读</div><div class="s">识别中</div></div>
+      <div class="badge lock"><div class="r"><i class="fa fa-leaf"></i></div><div class="n">节气田园</div><div class="s">未解锁</div></div>
+    </div>
+
+    <div class="card" style="margin-top:12px;padding:4px 0">
+      <div style="padding:13px 16px 8px"><div class="t" style="font-size:13.5px;font-weight:700">附近探索任务</div></div>
+      <div style="padding:0 4px 6px">
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;background:#F5FAF7">
+          <div style="width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;color:var(--b600);font-size:15px;border:1px solid var(--line)"><i class="fa fa-university"></i></div>
+          <div style="flex:1"><div style="font-size:12.5px;font-weight:600">汉阙古塔 · 东汉阙门复原</div><div style="font-size:9.5px;color:var(--ink3);margin-top:2px">距你 28m · AR 3D 复原 · 语音讲解</div></div>
+          <span style="font-size:9.5px;color:var(--jade);background:var(--jade-bg);padding:3px 9px;border-radius:999px;font-weight:600">已解锁</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px">
+          <div style="width:34px;height:34px;border-radius:11px;background:#fff;display:grid;place-items:center;color:var(--sun-d);font-size:15px;border:1px solid var(--line)"><i class="fa fa-font"></i></div>
+          <div style="flex:1"><div style="font-size:12.5px;font-weight:600">古碑林 · 隶书碑文识读</div><div style="font-size:9.5px;color:var(--ink3);margin-top:2px">距你 210m · 集字临摹 · 对照释文</div></div>
+          <span style="font-size:9.5px;color:var(--sun-d);background:var(--sun-50);padding:3px 9px;border-radius:999px;font-weight:600">识别中</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;opacity:.62">
+          <div style="width:34px;height:34px;border-radius:11px;background:#F0F4F1;display:grid;place-items:center;color:#9AAEa4;font-size:15px"><i class="fa fa-leaf"></i></div>
+          <div style="flex:1"><div style="font-size:12.5px;font-weight:600">节气田园 · 二十四节气径</div><div style="font-size:9.5px;color:var(--ink3);margin-top:2px">需先解锁 碑文解读</div></div>
+          <i class="fa fa-lock" style="color:var(--ink3);font-size:12px"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="guide">
+      <div class="av"><i class="fa fa-user-o"></i></div>
+      <div style="flex:1;min-width:0">
+        <div class="n">王世卿 · 汉文化讲解员</div>
+        <div class="s">樊寨乡贤 · 汉阙文化深耕 18 年</div>
+        <div class="star"><i class="fa fa-star"></i> 4.9 分 · 356 次带玩 <i class="fa fa-angle-right" style="margin-left:4px"></i></div>
+      </div>
+      <button class="btn btn-sun" style="padding:8px 14px;font-size:11px">约讲解</button>
+    </div>
+  </div>
+
+  <nav class="tabbar">
+    <div class="tab" onclick="go('home')"><div class="ic"><i class="fa fa-home"></i></div><span>首页</span></div>
+    <div class="tab" onclick="go('booking')"><div class="ic"><i class="fa fa-plane"></i></div><span>预约</span></div>
+    <div class="tab on"><div class="ic"><i class="fa fa-camera-retro"></i></div><span>寻迹</span></div>
+    <div class="tab" onclick="go('map')"><div class="ic"><i class="fa fa-map-o"></i></div><span>导览</span></div>
+  </nav>
+</section>
+
+<!-- ================================================================ 导览地图 -->
+<section class="screen" id="sc-map">
+  <div class="statusbar">
+    <span>9:41</span>
+    <span class="ic-right"><i class="fa fa-signal"></i><i class="fa fa-wifi"></i><i class="fa fa-battery-full"></i></span>
+  </div>
+
+  <div class="m-top">
+    <div class="m-search"><i class="fa fa-search"></i>搜索点位、路线、商户</div>
+    <div class="m-layer"><i class="fa fa-layer-group"></i></div>
+  </div>
+  <div class="m-filter">
+    <span class="f on">全部</span><span class="f">低空起降</span><span class="f">文化点位</span><span class="f">食宿</span><span class="f">田园体验</span>
+  </div>
+
+  <!-- 地图 -->
+  <div class="mapview">
+    <svg viewBox="0 0 390 420" width="390" height="420">
+      <defs>
+        <linearGradient id="land" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E9F1E6"/><stop offset="1" stop-color="#E2EEE0"/></linearGradient>
+        <pattern id="farmgrid" width="34" height="34" patternUnits="userSpaceOnUse">
+          <rect width="34" height="34" fill="none"/>
+          <path d="M0 8 q8 0 17 -6 q9 6 17 0 M0 24 q8 0 17 -6 q9 6 17 0" stroke="#C7DDBE" stroke-width="1.4" fill="none"/>
+        </pattern>
+      </defs>
+      <rect width="390" height="420" fill="url(#land)"/>
+      <!-- 田块 -->
+      <path d="M14 330 q60 -16 120 0 q60 14 120 -2 l22 90 l-266 6 Z" fill="#DFEDD4" stroke="#D3E4C6"/>
+      <path d="M260 60 q70 -8 120 10 l8 130 q-70 6 -130 -20 Z" fill="#E0EED3" stroke="#D4E6C7"/>
+      <!-- 水系 -->
+      <path d="M330 0 C300 60 350 110 300 170 C260 220 320 270 285 330 C262 372 292 400 300 420" stroke="#B9DCE6" stroke-width="16" fill="none" stroke-linecap="round" opacity=".9"/>
+      <path d="M330 0 C300 60 350 110 300 170 C260 220 320 270 285 330 C262 372 292 400 300 420" stroke="#D3EAEF" stroke-width="7" fill="none" stroke-linecap="round"/>
+      <path d="M-10 120 C60 108 130 118 190 108 C240 100 300 104 360 96" stroke="#FFFFFF" stroke-width="26" fill="none" opacity=".6" stroke-linecap="round"/>
+      <path d="M-10 292 C80 282 180 292 250 282 C300 276 340 280 410 274" stroke="#FFFFFF" stroke-width="22" fill="none" opacity=".6" stroke-linecap="round"/>
+      <g stroke="#C9A24B" stroke-width="2.2" stroke-dasharray="7 7" fill="none" opacity=".7">
+        <path d="M88 302 C138 250 158 210 208 168 C250 130 268 96 278 66"/>
+        <path d="M208 168 C226 178 250 176 262 190"/>
+      </g>
+      <!-- 地标点带标签 -->
+      <g font-size="9" font-family="PingFang SC">
+        <circle cx="88" cy="302" r="5" fill="#0E6352" stroke="#fff" stroke-width="2"/>
+        <rect x="52" y="310" width="66" height="16" rx="8" fill="#fff"/><text x="85" y="322" text-anchor="middle" fill="#152B24" font-weight="600">汉阙广场</text>
+        <circle cx="278" cy="66" r="5" fill="#CE7627" stroke="#fff" stroke-width="2"/>
+        <rect x="238" y="20" width="80" height="16" rx="8" fill="#fff"/><text x="278" y="32" text-anchor="middle" fill="#152B24" font-weight="600">樊寨低空驿站</text>
+        <circle cx="208" cy="168" r="5" fill="#8A6FB8" stroke="#fff" stroke-width="2"/>
+        <rect x="168" y="176" width="80" height="16" rx="8" fill="#fff"/><text x="208" y="188" text-anchor="middle" fill="#152B24" font-weight="600">汉文化体验馆</text>
+        <circle cx="262" cy="190" r="5" fill="#CE7627" stroke="#fff" stroke-width="2"/>
+        <rect x="226" y="200" width="72" height="16" rx="8" fill="#fff"/><text x="262" y="212" text-anchor="middle" fill="#152B24" font-weight="600">乡野食堂</text>
+        <circle cx="150" cy="228" r="5" fill="#B25F1C" stroke="#fff" stroke-width="2"/>
+        <rect x="110" y="238" width="80" height="16" rx="8" fill="#fff"/><text x="150" y="250" text-anchor="middle" fill="#152B24" font-weight="600">汉风民宿</text>
+        <circle cx="172" cy="150" r="5" fill="#B25F1C" stroke="#fff" stroke-width="2"/>
+        <rect x="132" y="124" width="80" height="16" rx="8" fill="#fff"/><text x="172" y="136" text-anchor="middle" fill="#152B24" font-weight="600">陶艺工坊</text>
+        <circle cx="60" cy="120" r="5" fill="#5D8E5E" stroke="#fff" stroke-width="2"/>
+        <rect x="18" y="96" width="84" height="16" rx="8" fill="#fff"/><text x="60" y="108" text-anchor="middle" fill="#152B24" font-weight="600">节气田园径</text>
+      </g>
+      <path d="M96 96 l12 -6" stroke="#D4574F" stroke-width="3" fill="none"/>
+    </svg>
+  </div>
+
+  <!-- 图例 / 缩放 -->
+  <div class="m-scale">
+    <div class="lg">
+      <div class="l"><div class="d" style="background:#0E6352"></div>文化点位</div>
+      <div class="l"><div class="d" style="background:#CE7627"></div>低空/食宿</div>
+      <div class="l"><div class="d" style="background:#B25F1C"></div>田园体验</div>
+      <div class="l"><div class="d" style="background:#C9A24B"></div>推荐路线</div>
+    </div>
+  </div>
+
+  <!-- 我的位置 -->
+  <div class="m-pos m-me">
+    <div class="m-pulse"></div>
+    <div class="m-loc"><i class="fa fa-location-arrow"></i></div>
+    <div class="m-note">我的位置 · 汉阙广场</div>
+  </div>
+
+  <div class="m-card">
+    <div class="mc-head">
+      <div class="t">智慧导览 · 汉韵半日游 <small>为您定制</small></div>
+      <div class="st"><i class="fa fa-check-circle"></i> 最优路径</div>
+    </div>
+    <div class="m-stops">
+      <div class="m-stop on"><div class="m-line"><div class="m-dot"></div><div class="seg"></div></div><div class="n">汉阙广场</div><div class="d">09:00</div></div>
+      <div class="m-stop"><div class="m-line"><div class="m-dot"></div><div class="seg"></div></div><div class="n">汉文化体验馆</div><div class="d">09:40</div></div>
+      <div class="m-stop"><div class="m-line"><div class="m-dot"></div><div class="seg"></div></div><div class="n">樊寨低空驿站</div><div class="d">11:00 起飞</div></div>
+      <div class="m-stop"><div class="m-line"><div class="m-dot"></div></div><div class="n">乡野食堂</div><div class="d">12:00 午宴</div></div>
+    </div>
+    <div class="mc-foot">
+      <div class="info"><b>全程 3.2 km</b> · 步行约 45 分钟<br>顺「文化—低空—乡味」动线，午后可加飞 <b>夕阳巡游 16:30</b></div>
+      <button class="btn btn-bamboo" onclick="go('ar')"><i class="fa fa-map-signs"></i>开始导航</button>
+    </div>
+  </div>
+
+  <nav class="m-tabs">
+    <div class="tab" onclick="go('home')"><div class="ic"><i class="fa fa-home"></i></div><span>首页</span></div>
+    <div class="tab" onclick="go('booking')"><div class="ic"><i class="fa fa-plane"></i></div><span>预约</span></div>
+    <div class="tab" onclick="go('ar')"><div class="ic"><i class="fa fa-camera-retro"></i></div><span>寻迹</span></div>
+    <div class="tab on"><div class="ic"><i class="fa fa-map-o"></i></div><span>导览</span></div>
+  </nav>
+</section>
+
+<script>
+/* ===== 路由 ===== */
+var routes = {home:'sc-home', booking:'sc-booking', pay:'sc-pay', ar:'sc-ar', map:'sc-map'};
+function show(force){
+  var h = (location.search.match(/[?&]s=([a-z]+)/)||[])[1] || (location.hash.replace('#','')) || 'home';
+  var id = routes[h] || 'sc-home';
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.toggle('active', s.id===id)});
+  if(force){ history.replaceState(null,'','#'+h); }
+}
+function go(h){ location.hash = h; }
+window.addEventListener('hashchange', show);
+
+/* ===== 预约：日期条 ===== */
+(function(){
+  var row = document.getElementById('dayrow'); if(!row) return;
+  var wd=['日','一','二','三','四','五','六'];
+  var base = new Date(2026,8,4); // 周五
+  var offs = [2,6]; // 约满：9/6(日)、9/10(四)
+  for(var i=0;i<7;i++){
+    var d=new Date(base); d.setDate(base.getDate()+i);
+    var el=document.createElement('div');
+    var off = offs.indexOf(i)>-1;
+    var pr = '¥298';
+    el.className='day'+(off?' off':'')+((i===1)?' sel':'');
+    el.innerHTML='<div class="wk">周'+wd[d.getDay()]+'</div><div class="dt">'+(d.getMonth()+1)+'/'+d.getDate()+'</div><div class="pr">'+(off?'约满':pr)+'</div>';
+    el.onclick=function(){ if(this.classList.contains('off'))return; row.querySelectorAll('.day').forEach(function(x){x.classList.remove('sel')}); this.classList.add('sel'); };
+    row.appendChild(el);
+  }
+})();
+
+/* ===== 预约：人数与费用 ===== */
+var ad=2, ch=0;
+function step(kind,delta){
+  if(kind==='ad') ad=Math.max(0,Math.min(9,ad+delta));
+  else ch=Math.max(0,Math.min(9,ch+delta));
+  document.getElementById('ad-cnt').textContent=ad;
+  document.getElementById('ch-cnt').textContent=ch;
+  var minusEls = document.querySelectorAll('#sc-booking .prow .stepper .minus');
+  var idx = kind==='ad'?0:1;
+  minusEls[idx].classList.toggle('on', (kind==='ad'?ad:ch)>0);
+  var sub = 298*ad + 149*ch;
+  var total = sub>0 ? sub-50 : 0;
+  var lines = document.getElementById('fee-lines'); lines.innerHTML='';
+  if(ad>0) lines.insertAdjacentHTML('beforeend','<div class="fee-line"><span>直升机巡游（成人）× '+ad+'</span><b class="num">¥'+(298*ad)+'</b></div>');
+  if(ch>0) lines.insertAdjacentHTML('beforeend','<div class="fee-line"><span>儿童半价座 × '+ch+'</span><b class="num">¥'+(149*ch)+'</b></div>');
+  if(sub>0) lines.insertAdjacentHTML('beforeend','<div class="fee-line"><span>首飞立减（平台补贴）</span><span class="gr">-¥50</span></div>');
+  lines.insertAdjacentHTML('beforeend','<div class="fee-line"><span>低空意外险</span><span class="gr">免费赠送</span></div>');
+  document.getElementById('fee-total').textContent='¥'+total;
+  document.getElementById('foot-total').textContent='¥'+total;
+  document.getElementById('foot-cnt').textContent=ad+ch;
+}
+step('ad',0);
+
+/* ===== 支付倒计时 ===== */
+(function(){
+  var t=15*60, el=document.getElementById('cd');
+  if(!el) return;
+  setInterval(function(){ t--; if(t<0)t=0; var m=Math.floor(t/60),s=t%60; el.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s; },1000);
+})();
+function payOk(){ document.getElementById('pay-ok').classList.add('show'); }
+var _qs=new URLSearchParams(location.search);
+if(_qs.get('shot')) document.body.classList.add('shot');
+if(_qs.get('s')==='pay'&&_qs.get('ok')) _qs.get('shot') ? payOk() : setTimeout(function(){payOk();},700);
+document.querySelectorAll('.m-row').forEach(function(r){ r.onclick=function(){ document.querySelectorAll('.m-row').forEach(function(x){x.classList.remove('sel')}); this.classList.add('sel'); }; });
+/* slot select */
+document.querySelectorAll('#sc-booking .slot').forEach(function(s){ s.onclick=function(){ if(this.classList.contains('full'))return; document.querySelectorAll('#sc-booking .slot').forEach(function(x){x.classList.remove('sel')}); this.classList.add('sel'); }; });
+/* day 容错：若默认值未点中，滚动到首个可飞 */
+/* AR 进度模拟 */
+setTimeout(function(){ var b=document.getElementById('ar-bar'); if(!b)return; b.style.width='92%'; document.getElementById('ar-pct').textContent='识别完成 100%'; document.getElementById('ar-tip').textContent='识别完成 · 汉阙古塔（东汉）· 点击查看复原'; }, 3400);
+
+show(true);
+</script>
+</body>
+</html>
+
