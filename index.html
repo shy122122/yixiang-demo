@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="飞鸟驿乡智慧乡村产业运营平台交互原型，覆盖游客服务、商户经营和平台运营三个业务端。">
+  <title>飞鸟驿乡 · 产品原型演示</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.7.0/style.css">
+  <style>
+    :root {
+      --forest: #173f35;
+      --forest-strong: #0d2d26;
+      --paper: #f4f1e8;
+      --surface: #fffdf8;
+      --ink: #1f2925;
+      --muted: #68736e;
+      --line: #d9ddd5;
+      --accent: #c66b33;
+      --focus: #f0b74a;
+      --header-height: 76px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "LXGW WenKai Screen", "Microsoft YaHei", sans-serif;
+    }
+
+    button, a { font: inherit; }
+
+    .app-shell {
+      display: grid;
+      grid-template-rows: var(--header-height) minmax(0, 1fr);
+      width: 100%;
+      height: 100%;
+    }
+
+    .topbar {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: minmax(230px, 1fr) auto minmax(180px, 1fr);
+      align-items: center;
+      gap: 22px;
+      padding: 10px 18px;
+      color: #fff;
+      background: var(--forest-strong);
+      border-bottom: 3px solid var(--accent);
+      box-shadow: 0 6px 24px rgba(13, 45, 38, 0.18);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      min-width: 0;
+      gap: 11px;
+    }
+
+    .brand-mark {
+      display: grid;
+      flex: 0 0 42px;
+      width: 42px;
+      height: 42px;
+      place-items: center;
+      color: var(--forest-strong);
+      background: var(--focus);
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+    }
+
+    .brand-mark .fa { font-size: 20px; transform: rotate(-12deg); }
+
+    .brand-copy { min-width: 0; }
+
+    .brand-name {
+      margin: 0;
+      overflow: hidden;
+      font-family: "STKaiti", "KaiTi", serif;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: 0;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .brand-subtitle {
+      margin: 4px 0 0;
+      overflow: hidden;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 11px;
+      line-height: 1;
+      letter-spacing: 0;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .switcher {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(112px, 1fr));
+      padding: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 7px;
+    }
+
+    .switch-button {
+      display: inline-flex;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 14px;
+      color: rgba(255, 255, 255, 0.7);
+      background: transparent;
+      border: 0;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: color 180ms ease, background 180ms ease, transform 180ms ease;
+    }
+
+    .switch-button:hover { color: #fff; background: rgba(255, 255, 255, 0.08); }
+    .switch-button:active { transform: translateY(1px); }
+    .switch-button[aria-selected="true"] {
+      color: var(--forest-strong);
+      background: var(--surface);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.16);
+    }
+
+    .switch-button:focus-visible,
+    .icon-button:focus-visible {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .mode-meta {
+      display: flex;
+      min-width: 0;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .mode-label {
+      min-width: 0;
+      text-align: right;
+    }
+
+    .mode-label strong,
+    .mode-label span {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mode-label strong { font-size: 13px; font-weight: 700; }
+    .mode-label span { margin-top: 3px; color: rgba(255,255,255,.58); font-size: 11px; }
+
+    .icon-button {
+      display: grid;
+      flex: 0 0 38px;
+      width: 38px;
+      height: 38px;
+      place-items: center;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 180ms ease, border-color 180ms ease;
+    }
+
+    .icon-button:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.32); }
+
+    .viewer {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      background: var(--paper);
+    }
+
+    .viewer::before {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      content: "";
+      background-image: radial-gradient(rgba(23, 63, 53, 0.12) 0.7px, transparent 0.7px);
+      background-size: 16px 16px;
+    }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      background: var(--paper);
+      transition: opacity 200ms ease, visibility 200ms ease;
+    }
+
+    .loading[hidden] { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    .loading-inner { text-align: center; }
+    .loading .fa { color: var(--accent); font-size: 24px; }
+    .loading p { margin: 10px 0 0; font-size: 13px; }
+
+    #prototype-frame {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      :root { --header-height: 126px; }
+      .topbar {
+        grid-template-columns: minmax(0, 1fr) auto;
+        grid-template-rows: 48px 52px;
+        gap: 8px 12px;
+        padding: 9px 12px;
+      }
+      .switcher { grid-column: 1 / -1; grid-row: 2; }
+      .mode-label { display: none; }
+      .brand-subtitle { display: none; }
+    }
+
+    @media (max-width: 520px) {
+      :root { --header-height: 120px; }
+      .brand-name { font-size: 17px; }
+      .brand-mark { flex-basis: 36px; width: 36px; height: 36px; }
+      .switcher { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .switch-button { min-width: 0; min-height: 40px; padding: 7px 5px; font-size: 12px; }
+      .switch-button .fa { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"><i class="fa fa-paper-plane"></i></span>
+        <div class="brand-copy">
+          <h1 class="brand-name">飞鸟驿乡</h1>
+          <p class="brand-subtitle">智慧乡村产业运营平台 · 产品原型演示</p>
+        </div>
+      </div>
+
+      <nav class="switcher" aria-label="演示端切换" role="tablist">
+        <button class="switch-button" type="button" role="tab" data-view="tourist" aria-selected="true">
+          <i class="fa fa-map-marker" aria-hidden="true"></i><span>游客端</span>
+        </button>
+        <button class="switch-button" type="button" role="tab" data-view="merchant" aria-selected="false">
+          <i class="fa fa-shopping-bag" aria-hidden="true"></i><span>商户工作台</span>
+        </button>
+        <button class="switch-button" type="button" role="tab" data-view="dashboard" aria-selected="false">
+          <i class="fa fa-bar-chart" aria-hidden="true"></i><span>运营驾驶舱</span>
+        </button>
+      </nav>
+
+      <div class="mode-meta">
+        <div class="mode-label" aria-live="polite">
+          <strong id="current-title">游客服务端</strong>
+          <span id="current-desc">行前规划、导览与体验预约</span>
+        </div>
+        <button class="icon-button" id="open-page" type="button" title="在新窗口打开当前页面" aria-label="在新窗口打开当前页面">
+          <i class="fa fa-external-link" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <section class="viewer" aria-label="产品原型展示区">
+      <div class="loading" id="loading">
+        <div class="loading-inner">
+          <i class="fa fa-circle-o-notch fa-spin" aria-hidden="true"></i>
+          <p>正在加载原型</p>
+        </div>
+      </div>
+      <iframe id="prototype-frame" title="飞鸟驿乡游客端原型" src="pages/tourist.html"></iframe>
+    </section>
+  </main>
+
+  <script>
+    const views = {
+      tourist: {
+        title: '游客服务端',
+        description: '行前规划、导览与体验预约',
+        pageTitle: '飞鸟驿乡游客端原型',
+        src: 'pages/tourist.html'
+      },
+      merchant: {
+        title: '商户经营工作台',
+        description: '经营概览、订单与商品管理',
+        pageTitle: '飞鸟驿乡商户经营工作台原型',
+        src: 'pages/merchant.html'
+      },
+      dashboard: {
+        title: '平台运营驾驶舱',
+        description: '全域监测、产业分析与运营决策',
+        pageTitle: '飞鸟驿乡运营数据驾驶舱原型',
+        src: 'pages/dashboard.html'
+      }
+    };
+
+    const frame = document.getElementById('prototype-frame');
+    const loading = document.getElementById('loading');
+    const title = document.getElementById('current-title');
+    const description = document.getElementById('current-desc');
+    const buttons = Array.from(document.querySelectorAll('[data-view]'));
+    let currentView = 'tourist';
+
+    function getInitialView() {
+      const value = location.hash.slice(1);
+      return views[value] ? value : 'tourist';
+    }
+
+    function selectView(view, updateHash = true) {
+      if (!views[view]) return;
+      const config = views[view];
+      currentView = view;
+      buttons.forEach((button) => {
+        const selected = button.dataset.view === view;
+        button.setAttribute('aria-selected', String(selected));
+        button.tabIndex = selected ? 0 : -1;
+      });
+      title.textContent = config.title;
+      description.textContent = config.description;
+      frame.title = config.pageTitle;
+      loading.hidden = false;
+      if (!frame.src.endsWith(config.src)) frame.src = config.src;
+      if (updateHash && location.hash !== `#${view}`) history.replaceState(null, '', `#${view}`);
+    }
+
+    buttons.forEach((button, index) => {
+      button.addEventListener('click', () => selectView(button.dataset.view));
+      button.addEventListener('keydown', (event) => {
+        if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        const direction = event.key === 'ArrowRight' ? 1 : -1;
+        const next = (index + direction + buttons.length) % buttons.length;
+        buttons[next].focus();
+        selectView(buttons[next].dataset.view);
+      });
+    });
+
+    frame.addEventListener('load', () => { loading.hidden = true; });
+    document.getElementById('open-page').addEventListener('click', () => {
+      window.open(views[currentView].src, '_blank', 'noopener,noreferrer');
+    });
+    window.addEventListener('hashchange', () => selectView(getInitialView(), false));
+    selectView(getInitialView(), false);
+  </script>
+</body>
+</html>
+
