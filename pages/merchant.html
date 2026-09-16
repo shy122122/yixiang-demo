@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞鸟驿乡 · 商户经营台</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --b900:#093B30; --b800:#0B4D3F; --b700:#0E6352; --b600:#14785C; --b500:#1E8A6C;
+    --b400:#3FA586; --b300:#7CC2A8; --b200:#B6DDCB; --b100:#DCEFE5; --b50:#EFF7F3;
+    --sun:#E8943A; --sun-d:#CE7627; --sun-50:#FCEFDC; --gold:#E9B54E;
+    --ink:#152B24; --ink2:#4C665C; --ink3:#8AA197; --line:#DCE8E1;
+    --red:#D4574F; --jade:#2F9E5F; --purple:#8A6FB8; --canvas:#EEF5F1;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--ink); background:var(--canvas);
+    -webkit-font-smoothing:antialiased; font-size:14px;
+    background-image:
+      radial-gradient(1000px 520px at 4% -12%, rgba(182,221,203,.5), transparent 60%),
+      radial-gradient(760px 420px at 102% -6%, rgba(252,239,220,.85), transparent 55%);
+    background-attachment:fixed;
+  }
+  .kai{font-family:"LXGW WenKai Screen","LXGW WenKai","KaiTi","Microsoft YaHei",sans-serif}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  ::selection{background:rgba(62,165,134,.22)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--b200);border-radius:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* 顶栏 */
+  .topbar{height:60px;background:rgba(9,59,48,.97);color:#fff;backdrop-filter:blur(8px);
+    position:sticky;top:0;z-index:50;
+    background-image:linear-gradient(120deg,#093B30 0%,#0E6352 60%,#0B4D3F 100%)}
+  .brand-bird{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#fff,var(--b100));color:var(--b700);font-size:17px;
+    box-shadow:0 4px 12px rgba(0,0,0,.18)}
+  .navitem{transition:all .18s ease}
+  .navitem:hover{background:rgba(255,255,255,.08)}
+  .navitem.active{background:rgba(255,255,255,.16)}
+  .navitem.active::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;border-radius:2px;background:var(--gold)}
+
+  /* 侧栏 */
+  .side{width:212px;background:#fff;border-right:1px solid var(--line)}
+  .s-item{display:flex;align-items:center;gap:11px;padding:11px 16px;margin:2px 10px;border-radius:12px;
+    color:var(--ink2);font-weight:500;font-size:13.5px;cursor:default;transition:all .15s}
+  .s-item i{width:18px;text-align:center;color:var(--ink3);transition:all .15s}
+  .s-item:hover{background:var(--b50);color:var(--b700)}
+  .s-item:hover i{color:var(--b500)}
+  .s-item.active{background:linear-gradient(90deg,var(--b100),rgba(220,239,229,.55));color:var(--b800);font-weight:700}
+  .s-item.active i{color:var(--b600)}
+  .s-item .bdg{margin-left:auto;background:var(--sun-50);color:var(--sun-d);font-size:11px;font-weight:700;
+    padding:1px 8px;border-radius:999px}
+  .s-item.active .bdg{background:var(--sun);color:#fff}
+  .s-sec{font-size:11px;color:var(--ink3);letter-spacing:.08em;padding:14px 20px 6px}
+
+  /* 通用 */
+  .card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:18px;
+    box-shadow:0 1px 2px rgba(21,43,36,.03),0 8px 26px rgba(21,43,36,.04)}
+  .card-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0}
+  .card-t{font-weight:800;font-size:15px;color:var(--ink);display:flex;align-items:center;gap:8px}
+  .card-t .dot{width:8px;height:8px;border-radius:3px;background:var(--b400)}
+  .card-s{font-size:12px;color:var(--ink3)}
+  .kpi .num{font-family:"LXGW WenKai Screen","KaiTi",serif}
+
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:600}
+  .pill.g{background:var(--b50);color:var(--b700)}
+  .lbl{font-size:11px;color:var(--ink3)}
+  .up{color:var(--jade);font-weight:700}
+  .badge-tag{font-size:11px;padding:2px 8px;border-radius:6px;font-weight:600}
+  .t-heli{background:#E6F2FD;color:#2A6FAE}.t-food{background:var(--sun-50);color:var(--sun-d)}
+  .t-exp{background:#F1EBF9;color:#7A5BA8}.t-lodge{background:var(--b100);color:var(--b700)}
+  .t-jour{background:#E1F3E9;color:#1F7A4C}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border-radius:11px;font-weight:700;cursor:pointer;
+    border:none;transition:all .18s;font-size:13px}
+  .btn-sun{background:linear-gradient(180deg,#F0A24E,var(--sun-d));color:#fff;
+    box-shadow:0 4px 12px rgba(232,148,58,.32)}
+  .btn-sun:hover{filter:brightness(1.05);transform:translateY(-1px);box-shadow:0 6px 16px rgba(232,148,58,.4)}
+  .btn-ghost{background:#fff;border:1px solid var(--b200);color:var(--b700)}
+  .btn-ghost:hover{background:var(--b50);border-color:var(--b300)}
+  .btn-link{color:var(--b600);font-weight:600}
+  .btn-link:hover{color:var(--b800)}
+  table{border-collapse:collapse}
+  th{font-size:11px;color:var(--ink3);font-weight:600;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{font-size:13px;padding:10px;border-bottom:1px solid #EDF3F0;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .rownew{animation:fl .4s ease}
+  @keyframes fl{from{opacity:0;transform:translateX(-6px)}to{opacity:1}}
+
+  .rise{opacity:0;animation:rise .6s cubic-bezier(.22,.61,.36,1) forwards}
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+  .r1{animation-delay:.05s}.r2{animation-delay:.12s}.r3{animation-delay:.2s}.r4{animation-delay:.28s}
+  .r5{animation-delay:.34s}
+  .pulse{animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<header class="topbar flex items-center px-6 gap-4">
+  <div class="flex items-center gap-3">
+    <div class="brand-bird"><i class="fa fa-paper-plane-o"></i></div>
+    <div>
+      <div class="kai" style="font-weight:800;font-size:17px;line-height:1.1">飞鸟驿乡 · 商户经营台</div>
+      <div style="font-size:10.5px;opacity:.7">樊寨村 · 村域商户数字化经营</div>
+    </div>
+  </div>
+  <nav class="flex items-center gap-1 ml-6">
+    <div class="navitem active" style="position:relative;padding:8px 14px;border-radius:10px;font-size:13px;cursor:default">经营概览</div>
+    <div class="navitem" style="position:relative;padding:8px 14px;border-radius:10px;font-size:13px;cursor:default">订单中心</div>
+    <div class="navitem" style="position:relative;padding:8px 14px;border-radius:10px;font-size:13px;cursor:default">产品与档期</div>
+    <div class="navitem" style="position:relative;padding:8px 14px;border-radius:10px;font-size:13px;cursor:default">评价管理</div>
+  </nav>
+  <div class="flex-1"></div>
+  <div class="hidden lg:flex items-center gap-2" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);padding:6px 12px;border-radius:11px;font-size:12px">
+    <span><i class="fa fa-sun-o" style="color:#FFD9A0"></i> 晴 27°C</span><span style="opacity:.5">|</span>
+    <span><i class="fa fa-paper-plane" style="color:#9BD9C2"></i> 今日可飞</span><span style="opacity:.5">|</span>
+    <span><i class="fa fa-users"></i> 村内客流 1,260</span>
+  </div>
+  <div class="flex items-center gap-3">
+    <div style="position:relative;font-size:16px;opacity:.9"><i class="fa fa-bell-o"></i>
+      <span class="pulse" style="position:absolute;top:0;right:-2px;width:7px;height:7px;border-radius:50%;background:var(--sun);border:1.5px solid #0B4D3F"></span></div>
+    <div class="flex items-center gap-2">
+      <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#F0A24E,#CE7627);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700">汉</div>
+      <div style="font-size:12px;line-height:1.2"><div style="font-weight:700">汉风小院</div><div style="opacity:.65;font-size:10.5px">主理人 · 王世卿</div></div>
+      <i class="fa fa-angle-down" style="font-size:11px;opacity:.7;margin-left:2px"></i>
+    </div>
+  </div>
+</header>
+
+<div class="flex" style="min-height:calc(100vh - 60px)">
+  <!-- 侧栏 -->
+  <aside class="side py-4">
+    <div class="s-sec">经营</div>
+    <div class="s-item active"><i class="fa fa-th-large"></i>经营概览<span class="bdg">今日</span></div>
+    <div class="s-item"><i class="fa fa-file-text-o"></i>订单管理<span class="bdg" style="background:#fff0e3">5</span></div>
+    <div class="s-item"><i class="fa fa-calendar-o"></i>产品与档期</div>
+    <div class="s-sec">运营</div>
+    <div class="s-item"><i class="fa fa-star-o"></i>评价管理<span style="margin-left:auto;font-size:11px;color:var(--sun-d)">2 待回</span></div>
+    <div class="s-item"><i class="fa fa-line-chart"></i>经营分析</div>
+    <div class="s-item"><i class="fa fa-camera"></i>内容与种草</div>
+    <div class="s-sec">资金</div>
+    <div class="s-item"><i class="fa fa-credit-card"></i>结算对账</div>
+    <div class="s-item"><i class="fa fa-file-excel-o"></i>导出台账</div>
+    <div class="s-sec">支持</div>
+    <div class="s-item"><i class="fa fa-life-ring"></i>平台帮助</div>
+    <div class="s-item" style="margin-top:14px;background:var(--b50);border:1px dashed var(--b200);color:var(--b700)">
+      <i class="fa fa-rocket"></i>低空联运申请</div>
+  </aside>
+
+  <!-- 主区 -->
+  <main class="flex-1 p-6" style="max-width:1240px;padding:22px 26px 40px">
+
+    <!-- 问候条 -->
+    <div class="flex items-end justify-between mb-5 rise r1">
+      <div>
+        <h1 class="kai" style="font-size:24px;font-weight:800;margin:0 0 6px">上午好，王叔 <span style="color:var(--b400);font-weight:600">· 汉风小院</span></h1>
+        <div style="color:var(--ink2);font-size:13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span><i class="fa fa-map-marker" style="color:var(--b500)"></i> 樊寨村 · 汉文化体验街区 16 号</span>
+          <span style="color:var(--line)">|</span>
+          <span>经营宿位 8 间 · 汉宴桌席 10 桌 · 汉风体验 4 项</span>
+          <span style="color:var(--line)">|</span>
+          <span class="pill g"><i class="fa fa-paper-plane" style="color:var(--b500)"></i>已加入「低空瞰樊寨」联运</span>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button class="btn btn-ghost px-3 py-2"><i class="fa fa-qrcode"></i>扫码验单</button>
+        <button class="btn btn-sun px-4 py-2"><i class="fa fa-edit"></i>上新产品</button>
+      </div>
+    </div>
+
+    <!-- 今日提醒 -->
+    <div class="card rise r1 mb-4" style="display:flex;align-items:center;gap:14px;padding:12px 18px;background:linear-gradient(90deg,rgba(252,239,220,.55),rgba(255,255,255,.95));border-color:rgba(232,148,58,.25)">
+      <div style="width:34px;height:34px;border-radius:11px;background:var(--sun-50);color:var(--sun-d);display:flex;align-items:center;justify-content:center;font-size:16px"><i class="fa fa-bullhorn"></i></div>
+      <div style="flex:1;font-size:13px"><b>今日 16:30 夕阳班次落地后</b> 将有 12 人「空中瞰樊寨 + 汉宴双人餐」联运团队到店，请预留 3 桌并备好汉服迎宾。</div>
+      <button class="btn btn-ghost px-3 py-1.5" style="font-size:12px">查看接待清单</button>
+    </div>
+
+    <!-- KPI -->
+    <div class="grid grid-cols-4 gap-4 mb-4">
+      <div class="card kpi rise r1" style="padding:16px 18px;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-22px;top:-22px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,rgba(62,165,134,.16),transparent 70%)"></div>
+        <div class="flex items-center gap-2 lbl mb-2"><span class="badge-tag t-heli">今日</span> 营业额（含平台单）</div>
+        <div class="num" style="font-size:29px;font-weight:800;line-height:1"><span style="font-size:16px;font-weight:700;color:var(--ink3)">¥</span>8,260</div>
+        <div class="mt-2 text-xs" style="color:var(--ink3)"><span class="up"><i class="fa fa-arrow-up"></i> 12.6%</span> 较昨日 · 其中低空联运 2,940</div>
+      </div>
+      <div class="card kpi rise r2" style="padding:16px 18px;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-22px;top:-22px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,rgba(232,148,58,.16),transparent 70%)"></div>
+        <div class="flex items-center gap-2 lbl mb-2"><span class="badge-tag t-food">待办</span> 待履约订单</div>
+        <div class="num" style="font-size:29px;font-weight:800;line-height:1">14 <span style="font-size:13px;color:var(--ink3);font-weight:500">单</span></div>
+        <div class="mt-2 text-xs" style="color:var(--ink3)">今日午/晚市 汉宴 6 · 宿位 4 · 体验 4</div>
+      </div>
+      <div class="card kpi rise r3" style="padding:16px 18px;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-22px;top:-22px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,rgba(138,111,184,.14),transparent 70%)"></div>
+        <div class="flex items-center gap-2 lbl mb-2"><span class="badge-tag t-exp">本月</span> 累计增收</div>
+        <div class="num" style="font-size:29px;font-weight:800;line-height:1"><span style="font-size:16px;font-weight:700;color:var(--ink3)">¥</span>41,680</div>
+        <div class="mt-2 text-xs" style="color:var(--ink3)">平台导流占比 <b style="color:var(--b600)">73%</b> · 线上订单增长</div>
+      </div>
+      <div class="card kpi rise r4" style="padding:16px 18px;position:relative;overflow:hidden">
+        <div style="position:absolute;right:-22px;top:-22px;width:92px;height:92px;border-radius:50%;background:radial-gradient(circle,rgba(47,158,95,.16),transparent 70%)"></div>
+        <div class="flex items-center gap-2 lbl mb-2"><span class="badge-tag t-jour">口碑</span> 综合好评率</div>
+        <div class="num" style="font-size:29px;font-weight:800;line-height:1">4.9 <span style="font-size:13px;color:var(--ink3);font-weight:500">/ 5.0</span></div>
+        <div class="mt-2 text-xs" style="color:var(--ink3)"><span class="up"><i class="fa fa-star" style="color:var(--gold)"></i> 1,204</span> 条评价 · 环比 +0.1</div>
+      </div>
+    </div>
+
+    <!-- 订单 + 渠道 -->
+    <div class="grid grid-cols-3 gap-4 mb-4">
+      <!-- 实时订单 -->
+      <div class="card rise r2" style="grid-column:span 2">
+        <div class="card-h">
+          <div class="card-t"><span class="dot"></span>今日接单<span class="badge-tag t-food" style="margin-left:6px">实时 5 笔</span></div>
+          <button class="btn btn-link text-xs"><i class="fa fa-angle-right"></i> 全部订单</button>
+        </div>
+        <div style="padding:6px 18px 14px">
+          <table style="width:100%">
+            <thead><tr><th>到店/服务</th><th>产品</th><th>客单</th><th>来源</th><th>状态</th><th style="text-align:right">操作</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="num" style="white-space:nowrap"><b>12:30</b><div style="color:var(--ink3);font-size:11px">宋* / 李*</div></td>
+                <td><span class="badge-tag t-food">乡宴</span> 汉宴双人餐 + 汉服体验</td>
+                <td class="num"><b>¥168</b></td>
+                <td><span class="pill g"><i class="fa fa-paper-plane" style="color:var(--b500);font-size:10px"></i> 低空联运</span></td>
+                <td><span style="color:var(--sun-d)"><i class="fa fa-clock-o"></i> 待确认</span></td>
+                <td style="text-align:right"><button class="btn btn-sun px-3 py-1.5" style="font-size:12px" onclick="this.textContent='已接单';this.classList.remove('btn-sun');this.classList.add('btn-ghost');this.parentElement.previousElementSibling.innerHTML='<span style=color:var(--jade)><i class=fa fa-check-circle-o></i> 已确认</span>'">接单</button></td>
+              </tr>
+              <tr>
+                <td class="num" style="white-space:nowrap"><b>14:30</b><div style="color:var(--ink3);font-size:11px">低空团队 · 12 人</div></td>
+                <td><span class="badge-tag t-lodge">宿</span> 观星房 ×3 + 汉宴 · 包场</td>
+                <td class="num"><b>¥2,940</b></td>
+                <td><span class="pill g"><i class="fa fa-paper-plane" style="color:var(--b500);font-size:10px"></i> 低空联运</span></td>
+                <td><span style="color:var(--ink2)">已自动接单</span></td>
+                <td style="text-align:right"><button class="btn btn-link text-xs">接待清单</button></td>
+              </tr>
+              <tr>
+                <td class="num" style="white-space:nowrap"><b>15:00</b><div style="color:var(--ink3);font-size:11px">赵*</div></td>
+                <td><span class="badge-tag t-exp">体验</span> 陶艺工坊 · 拉坯 1 小时</td>
+                <td class="num"><b>¥68</b></td>
+                <td><span class="pill g" style="background:var(--b50);color:var(--b700)"><i class="fa fa-weixin" style="font-size:11px"></i> 微信小程序</span></td>
+                <td><span style="color:var(--sun-d)"><i class="fa fa-clock-o"></i> 待确认</span></td>
+                <td style="text-align:right"><button class="btn btn-sun px-3 py-1.5" style="font-size:12px" onclick="this.textContent='已接单';this.classList.remove('btn-sun');this.classList.add('btn-ghost');this.parentElement.previousElementSibling.innerHTML='<span style=color:var(--jade)><i class=fa fa-check-circle-o></i> 已确认</span>'">接单</button></td>
+              </tr>
+              <tr>
+                <td class="num" style="white-space:nowrap"><b>明 09:00</b><div style="color:var(--ink3);font-size:11px">罗* 等 4 人</div></td>
+                <td><span class="badge-tag t-heli">低空</span> 空中瞰樊寨 直升机巡游 ×4<div style="color:var(--ink3);font-size:11px">关联宿位·延时退房已送</div></td>
+                <td class="num"><b>¥1,192</b></td>
+                <td><span class="pill g" style="background:var(--b100);color:var(--b700)"><i class="fa fa-mobile" style="font-size:11px"></i> 飞鸟驿乡 App</span></td>
+                <td><span style="color:var(--jade)"><i class="fa fa-check-circle-o"></i> 已确认</span></td>
+                <td style="text-align:right"><button class="btn btn-link text-xs">关联房卡</button></td>
+              </tr>
+              <tr>
+                <td class="num" style="white-space:nowrap"><b>明 18:30</b><div style="color:var(--ink3);font-size:11px">研学团 · 22 人</div></td>
+                <td><span class="badge-tag t-food">乡宴</span> 汉宴·节气套餐 + 碑林讲解</td>
+                <td class="num"><b>¥1,650</b></td>
+                <td><span class="pill g" style="background:#F4ECF9;color:#7A5BA8"><i class="fa fa-douban" style="font-size:10px"></i> 渠道分销</span></td>
+                <td><span style="color:var(--ink2)">待留位确认</span></td>
+                <td style="text-align:right"><button class="btn btn-ghost px-3 py-1.5" style="font-size:12px">联系买家</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="display:flex;gap:8px;align-items:center;background:var(--b50);border-radius:12px;padding:9px 12px;font-size:12px;color:var(--ink2);margin-top:10px">
+            <i class="fa fa-magic" style="color:var(--b500)"></i>
+            <b style="color:var(--b700)">AI 建议：</b>今日低空联运团队 12:30 到店，可提前 30 分钟布置汉服迎宾；明日研学团建议加订「乡野食堂」3 桌分流。
+          </div>
+        </div>
+      </div>
+
+      <!-- 渠道与实时 -->
+      <div class="flex flex-col gap-4">
+        <div class="card rise r3" style="flex:1">
+          <div class="card-h"><div class="card-t"><span class="dot" style="background:var(--sun)"></span>订单来源</div></div>
+          <div style="display:flex;align-items:center;gap:6px;padding:2px 14px 0;position:relative;height:128px">
+            <canvas id="srcChart"></canvas>
+            <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;padding-bottom:2px">
+              <div class="kai num" style="font-size:21px;font-weight:800">43</div>
+              <div style="font-size:10.5px;color:var(--ink3)">今日订单</div>
+            </div>
+          </div>
+          <div style="padding:2px 16px 14px;font-size:12px;color:var(--ink2);display:grid;grid-template-columns:1fr 1fr;gap:4px 10px">
+            <div><i class="fa fa-circle" style="color:var(--b600);font-size:8px"></i> 飞鸟驿乡 App&nbsp;<b class="num">46%</b></div>
+            <div><i class="fa fa-circle" style="color:var(--sun);font-size:8px"></i> 低空联运&nbsp;<b class="num">22%</b></div>
+            <div><i class="fa fa-circle" style="color:#7A5BA8;font-size:8px"></i> 分销渠道&nbsp;<b class="num">15%</b></div>
+            <div><i class="fa fa-circle" style="color:var(--b300);font-size:8px"></i> 到店直客&nbsp;<b class="num">17%</b></div>
+          </div>
+        </div>
+        <div class="card rise r3" style="padding:14px 16px;border-left:3px solid var(--sun)">
+          <div style="font-size:12px;color:var(--ink3);display:flex;justify-content:space-between"><span>今日「空港起降」天气</span><span class="num">27°C · 东风 2 级</span></div>
+          <div class="kai" style="font-size:18px;font-weight:800;color:var(--b700);margin-top:4px"><i class="fa fa-sun-o" style="color:var(--sun);font-size:15px"></i> 适合飞行 · 班次正常</div>
+          <div style="display:flex;gap:6px;margin-top:10px">
+            <span class="pill g">已飞 3,286 人次</span>
+            <span class="pill g">本月联运增收 ¥2.1万</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 营收图 + 档期 -->
+    <div class="grid grid-cols-3 gap-4 mb-4">
+      <div class="card rise r3" style="grid-column:span 2">
+        <div class="card-h">
+          <div class="card-t"><span class="dot" style="background:var(--jade)"></span>近 7 日营业额<div class="card-s" style="font-weight:400">低空联运 · 平台单 · 到店</div></div>
+          <div class="flex gap-1" style="background:var(--b50);padding:3px;border-radius:10px">
+            <span style="padding:4px 12px;border-radius:8px;font-size:12px;color:var(--ink3)">日</span>
+            <span style="padding:4px 12px;border-radius:8px;font-size:12px;font-weight:700;color:var(--b800);background:#fff;box-shadow:0 1px 4px rgba(21,43,36,.1)">周</span>
+            <span style="padding:4px 12px;border-radius:8px;font-size:12px;color:var(--ink3)">月</span>
+          </div>
+        </div>
+        <div style="padding:8px 18px 16px;height:236px"><canvas id="revChart"></canvas></div>
+      </div>
+
+      <!-- 档期热度 -->
+      <div class="card rise r4">
+        <div class="card-h"><div class="card-t"><span class="dot" style="background:#7A5BA8"></span>热门档期 · 售罄预警</div></div>
+        <div style="padding:12px 18px 16px;display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div class="flex justify-between text-sm mb-1"><b>观星房 · 周末档</b><b class="num" style="color:var(--sun-d)">已约 96%</b></div>
+            <div style="height:7px;border-radius:6px;background:var(--b50);overflow:hidden"><div style="width:96%;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--b400),var(--sun));"></div></div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:5px">9/5–9/6 周六·日 &nbsp;仅余 <b style="color:var(--red)">1</b> 间 &nbsp;· 建议加推「观星+晨航」联票</div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-1"><b>汉宴双人餐 · 晚市</b><b class="num" style="color:var(--jade)">充足</b></div>
+            <div style="height:7px;border-radius:6px;background:var(--b50);overflow:hidden"><div style="width:58%;height:100%;border-radius:6px;background:linear-gradient(90deg,var(--b400),var(--b300));"></div></div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:5px">今晚剩余 4 席 · 累计售出 867 份</div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-1"><b>陶艺拉坯 · 下午档</b><b class="num" style="color:var(--sun-d)">高峰</b></div>
+            <div style="height:7px;border-radius:6px;background:var(--b50);overflow:hidden"><div style="width:82%;height:100%;border-radius:6px;background:linear-gradient(90deg,#B99BD6,#7A5BA8);"></div></div>
+            <div style="font-size:11px;color:var(--ink3);margin-top:5px">15:00–17:00 余 2 位 · 研学团将占用</div>
+          </div>
+          <div style="border-top:1px dashed var(--line);padding-top:10px">
+            <div class="flex justify-between items-center">
+              <div style="font-size:13px"><b style="color:var(--b700)">AI 定价建议</b><div style="font-size:11px;color:var(--ink3);margin-top:2px">周末观星房可上调至 ¥388，预计增收 ¥820</div></div>
+              <span class="badge-tag t-jour">一键采纳</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 评价 + 结算 -->
+    <div class="grid grid-cols-2 gap-4">
+      <div class="card rise r5">
+        <div class="card-h"><div class="card-t"><span class="dot" style="background:var(--gold)"></span>今日评价</div>
+          <div style="display:flex;gap:2px;color:var(--gold);font-size:12px"><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star-half-o"></i>&nbsp;<b class="num" style="color:var(--ink)">4.9</b></div>
+        </div>
+        <div style="padding:10px 18px 16px">
+          <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid #EDF3F0">
+            <div style="width:30px;height:30px;border-radius:50%;background:var(--b100);color:var(--b600);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none">林</div>
+            <div style="flex:1;font-size:12.5px;color:var(--ink2)"><div style="color:var(--ink);font-weight:600;margin-bottom:2px">林女士 <span class="num" style="color:var(--ink3);font-weight:400;font-size:11px">刚刚 · 汉宴双人餐</span></div>「汉宴摆盘有惊喜，还送了自制桂花米糕，很用心」<span style="color:var(--ink3)">…</span></div>
+          </div>
+          <div style="display:flex;gap:10px;padding:8px 0">
+            <div style="width:30px;height:30px;border-radius:50%;background:#F1EBF9;color:#7A5BA8;display:flex;align-items:center;justify-content:center;font-weight:700;flex:none">周</div>
+            <div style="flex:1;font-size:12.5px;color:var(--ink2)"><div style="color:var(--ink);font-weight:600;margin-bottom:2px">周同学 <span class="num" style="color:var(--ink3);font-weight:400;font-size:11px">2 分钟前 · 观星房</span></div>「屋顶就能看直升机起降，孩子很兴奋，清晨巡游值得坐」</div>
+          </div>
+          <div style="background:var(--sun-50);border-radius:12px;padding:9px 12px;font-size:12px;color:var(--ink2);margin-top:6px">
+            <b style="color:var(--sun-d)">2 条待回复 · 均为 4 星提升建议</b> · <span style="color:var(--b600);font-weight:600">AI 已拟回复</span>，点击即可发送
+          </div>
+        </div>
+      </div>
+
+      <div class="card rise r5">
+        <div class="card-h"><div class="card-t"><span class="dot" style="background:var(--b600)"></span>结算与对账</div>
+          <span class="pill g" style="background:#E1F3E9;color:#1F7A4C"><i class="fa fa-check-circle-o"></i> 本月已对账 4 期</span>
+        </div>
+        <div style="padding:10px 18px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px 18px">
+          <div style="background:var(--b50);border-radius:14px;padding:12px 14px">
+            <div class="lbl mb-1">上月待结算</div>
+            <div class="kai num" style="font-size:21px;font-weight:800;color:var(--b700)">¥38,200</div>
+            <div style="font-size:11px;color:var(--ink3)">昨日 <b>15:00</b> 已到账</div>
+          </div>
+          <div style="background:var(--sun-50);border-radius:14px;padding:12px 14px">
+            <div class="lbl mb-1">结算中（T+1）</div>
+            <div class="kai num" style="font-size:21px;font-weight:800;color:var(--sun-d)">¥6,430</div>
+            <div style="font-size:11px;color:var(--ink3)">含低空联运 2,940</div>
+          </div>
+          <div style="grid-column:1/-1;font-size:12px;color:var(--ink2);line-height:1.7">
+            <div class="flex justify-between"><span>本月累计营收</span><b class="num">¥41,680</b></div>
+            <div class="flex justify-between"><span>平台服务费（6%）</span><b class="num">- ¥2,501</b></div>
+            <div class="flex justify-between" style="border-top:1px dashed var(--line);margin-top:4px;padding-top:4px"><span style="color:var(--ink)">实际到账</span><b class="num" style="color:var(--b700)">¥39,179</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;color:var(--ink3);font-size:12px;margin-top:20px">
+      <i class="fa fa-cloud" style="opacity:.5"></i> 飞鸟驿乡 · 让樊寨被看见　·　数据更新时间 09:12　·　演示原型数据
+    </div>
+  </main>
+</div>
+
+<script>
+  var INK='#8AA197', LINE='#EDF3F0';
+  Chart.defaults.font.family='"PingFang SC","Microsoft YaHei",sans-serif';
+  Chart.defaults.color=INK;
+  new Chart(document.getElementById('srcChart'),{
+    type:'doughnut',
+    data:{labels:['飞鸟驿乡App','低空联运','分销渠道','到店直客'],
+      datasets:[{data:[46,22,15,17],backgroundColor:['#14785C','#E8943A','#7A5BA8','#7CC2A8'],
+        borderColor:'#fff',borderWidth:3,hoverOffset:4}]},
+    options:{cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:true}},animation:{duration:800}}
+  });
+  new Chart(document.getElementById('revChart'),{
+    type:'bar',
+    data:{
+      labels:['8/28','8/29','8/30','8/31','9/1','9/2','今日'],
+      datasets:[
+        {label:'到店',data:[2600,3200,3800,2900,4100,4800,5380],backgroundColor:'#7CC2A8',borderRadius:6,stack:'s'},
+        {label:'低空联运',data:[0,860,1240,980,1620,2140,2940],backgroundColor:'#E8943A',borderRadius:6,stack:'s'}
+      ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{grid:{display:false},stacked:true},
+        y:{stacked:true,ticks:{callback:function(v){return '¥'+(v/1000).toFixed(1)+'k'}},grid:{color:LINE}}},
+      plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,pointStyle:'circle',boxWidth:6,boxHeight:6,padding:16}},
+        tooltip:{callbacks:{label:function(c){return c.dataset.label+': ¥'+c.raw.toLocaleString()}}}}
+    }
+  });
+</script>
+</body>
+</html>
+
