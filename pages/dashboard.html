@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>飞鸟驿乡 · 运营数据驾驶舱</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-webfont@1.7.0/style.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --b900:#093B30; --b800:#0B4D3F; --b700:#0E6352; --b600:#14785C; --b500:#1E8A6C;
+    --b400:#3FA586; --b300:#7CC2A8; --b200:#B6DDCB; --b100:#DCEFE5; --b50:#EFF7F3;
+    --sun:#E8943A; --sun-d:#CE7627; --sun-50:#FCEFDC; --gold:#E9B54E;
+    --ink:#152B24; --ink2:#4C665C; --ink3:#8AA197; --line:#DCE8E1;
+    --red:#D4574F; --jade:#2F9E5F; --purple:#8A6FB8; --canvas:#EEF5F1;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"PingFang SC","Microsoft YaHei",system-ui,-apple-system,sans-serif;
+    color:var(--ink);background:var(--canvas);font-size:14px;-webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(1100px 540px at 0% -14%,rgba(182,221,203,.5),transparent 60%),
+      radial-gradient(760px 420px at 102% -4%,rgba(252,239,220,.8),transparent 55%);
+    background-attachment:fixed;
+  }
+  .kai{font-family:"LXGW WenKai Screen","LXGW WenKai","KaiTi","Microsoft YaHei",sans-serif}
+  .num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+  ::selection{background:rgba(62,165,134,.22)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--b200);border-radius:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  .topbar{height:60px;background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+  .brand-bird{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--b700),var(--b500));color:#fff;font-size:16px;
+    box-shadow:0 4px 10px rgba(20,120,92,.3)}
+  .ttop{font-size:11px;color:var(--ink3);display:flex;align-items:center;gap:6px}
+  .tnav{font-size:13px;color:var(--ink2);font-weight:600;padding:7px 13px;border-radius:10px;cursor:default;transition:all .15s}
+  .tnav:hover{background:var(--b50);color:var(--b700)}
+  .tnav.active{background:var(--b900);color:#fff}
+  .card{background:rgba(255,255,255,.95);border:1px solid var(--line);border-radius:18px;box-shadow:0 1px 2px rgba(21,43,36,.03),0 8px 26px rgba(21,43,36,.04)}
+  .card-h{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 0}
+  .card-t{font-weight:800;font-size:15px;display:flex;align-items:center;gap:9px}
+  .card-t .dot{width:8px;height:8px;border-radius:3px;background:var(--b400)}
+  .card-s{font-size:12px;color:var(--ink3);font-weight:400}
+
+  .vchip{border:1px solid var(--line);background:#fff;border-radius:13px;padding:8px 14px;cursor:default;transition:all .18s}
+  .vchip.active{border-color:var(--b500);background:linear-gradient(180deg,#fff,var(--b50));box-shadow:0 6px 18px rgba(20,120,92,.14)}
+  .vchip .nm{font-weight:800;font-size:14px;display:flex;align-items:center;gap:7px}
+  .vchip.active .nm{color:var(--b800)}
+  .st{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;padding:1px 8px;border-radius:999px}
+  .st.live{background:#E1F3E9;color:#1F7A4C}.st.beta{background:#FFF3DC;color:#B0781E}.st.plan{background:#EEEEF4;color:#6E6E85}
+  .kbox{position:relative;overflow:hidden}
+  .kbox .nm{font-weight:800;font-size:26px;line-height:1}
+  .rise{opacity:0;animation:rise .6s cubic-bezier(.22,.61,.36,1) forwards}
+  @keyframes rise{to{opacity:1;transform:translateY(0)}}
+  .r1{animation-delay:.04s}.r2{animation-delay:.1s}.r3{animation-delay:.18s}.r4{animation-delay:.26s}
+  .r5{animation-delay:.34s}
+  .lbl{font-size:11px;color:var(--ink3)}
+  .up{color:var(--jade);font-weight:700}
+  .pill{display:inline-flex;align-items:center;gap:6px;padding:4px 11px;border-radius:999px;font-size:12px;font-weight:600}
+  .heat{height:10px;border-radius:5px}
+</style>
+</head>
+<body>
+
+<!-- 顶栏 -->
+<header class="topbar flex items-center px-6 gap-4">
+  <div class="flex items-center gap-3">
+    <div class="brand-bird"><i class="fa fa-paper-plane"></i></div>
+    <div>
+      <div class="kai" style="font-weight:800;font-size:17px;line-height:1.1">飞鸟驿乡 · 运营中枢</div>
+      <div class="ttop">低空经济驱动 · 智慧乡村产业运营平台 · 后台</div>
+    </div>
+  </div>
+  <nav class="flex items-center gap-1 ml-4">
+    <div class="tnav active">运营总览</div>
+    <div class="tnav">客流洞察</div>
+    <div class="tnav">交易与订单</div>
+    <div class="tnav">低空运营</div>
+    <div class="tnav">商户生态</div>
+    <div class="tnav">内容与种草</div>
+  </nav>
+  <div class="flex-1"></div>
+  <div class="flex items-center gap-4 text-sm" style="color:var(--ink2)">
+    <span class="num"><i class="fa fa-clock-o" style="color:var(--b500)"></i> 09:12</span>
+    <span><i class="fa fa-sun-o" style="color:var(--sun)"></i> 晴 27°C · 适宜飞行</span>
+    <div class="flex items-center gap-2">
+      <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--b600),var(--b400));color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">运</div>
+      <div style="font-size:12px;line-height:1.2"><div style="font-weight:700">平台运营</div><div style="color:var(--ink3);font-size:10.5px">超级管理员</div></div>
+    </div>
+  </div>
+</header>
+
+<div style="max-width:1420px;margin:0 auto;padding:22px 26px 34px">
+
+  <!-- 标题 + 村域切换 -->
+  <div class="flex items-end justify-between mb-4 rise r1">
+    <div>
+      <h1 class="kai" style="font-size:24px;font-weight:800;margin:0 0 6px">运营总览 <span style="font-size:13px;font-weight:600;color:var(--ink3)">单村深耕 · 一村一档 · 可复制推广</span></h1>
+      <div style="color:var(--ink2);font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <span class="pill g" style="background:var(--b50);color:var(--b700)" id="vstatus"><i class="fa fa-check-circle-o" style="color:var(--b600)"></i> 樊寨村 · 正式运营第 42 天</span>
+        <span class="pill g" style="background:#E1F3E9;color:#1F7A4C"><i class="fa fa-rocket"></i> 低空航线已取证 · 6 班次/日</span>
+        <span class="pill g" style="background:var(--sun-50);color:var(--sun-d)"><i class="fa fa-users"></i> 在营商户 18 家</span>
+      </div>
+    </div>
+    <div class="text-right">
+      <div style="font-size:11px;color:var(--ink3);margin-bottom:6px">村域切换（演示）</div>
+      <div class="flex gap-2">
+        <div class="vchip active" onclick="switchVill(0)">
+          <div class="nm"><i class="fa fa-map-marker" style="color:var(--b500)"></i>樊寨村 <span class="st live">运营中</span></div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:3px" class="num">今日在园 1,260</div>
+        </div>
+        <div class="vchip" onclick="switchVill(1)">
+          <div class="nm"><i class="fa fa-map-o" style="color:#B0781E"></i>李家坳 <span class="st beta">内测中</span></div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:3px" class="num">签约商户 6 · 9/12 上线</div>
+        </div>
+        <div class="vchip" onclick="switchVill(2)">
+          <div class="nm"><i class="fa fa-map-o" style="color:#6E6E85"></i>云雾坪 <span class="st plan">规划</span></div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:3px" class="num">筹建 · 2026Q4</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今日待办预警条 -->
+  <div class="card mb-4 rise r1" style="display:flex;align-items:center;gap:16px;padding:11px 18px;background:linear-gradient(90deg,rgba(255,255,255,.96),rgba(252,239,220,.6));border-color:rgba(232,148,58,.22)">
+    <div style="width:32px;height:32px;border-radius:10px;background:var(--sun-50);color:var(--sun-d);display:flex;align-items:center;justify-content:center"><i class="fa fa-bell"></i></div>
+    <div style="flex:1;font-size:13px;color:var(--ink2)">
+      <b style="color:var(--ink)">运营助手提醒 · 3 项</b>
+      <span style="margin:0 10px;color:var(--line)">|</span>16:30 夕阳班次载客率已达 100%，建议关注候补
+      <span style="margin:0 10px;color:var(--line)">|</span>李家坳 内测单量超预期
+      <span style="margin:0 10px;color:var(--line)">|</span>2 家新商户待资质审核
+    </div>
+    <button style="background:var(--b900);color:#fff;border:none;border-radius:10px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer"><i class="fa fa-list-ul"></i> 查看清单</button>
+  </div>
+
+  <!-- KPI -->
+  <div class="grid grid-cols-4 gap-4 mb-4">
+    <div class="card kbox rise r2" style="padding:16px 18px">
+      <div style="position:absolute;right:-20px;top:-20px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle,rgba(20,120,92,.16),transparent 70%)"></div>
+      <div class="flex items-center justify-between mb-2"><span class="lbl"><i class="fa fa-users" style="color:var(--b500);width:16px"></i> 在园客流（实时）</span><span class="st live">健康</span></div>
+      <div class="kai num kpi" style="font-size:27px;font-weight:800" data-k="flow">1,260</div>
+      <div class="lbl mt-2 num"><span class="up"><i class="fa fa-arrow-up"></i> 18%</span> 较昨日同时段 · 峰值 09:40 2,140</div>
+    </div>
+    <div class="card kbox rise r2" style="padding:16px 18px">
+      <div style="position:absolute;right:-20px;top:-20px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle,rgba(232,148,58,.15),transparent 70%)"></div>
+      <div class="flex items-center justify-between mb-2"><span class="lbl"><i class="fa fa-cny" style="color:var(--sun);width:16px"></i> 今日交易额</span><span class="st live">¥</span></div>
+      <div class="kai num kpi" style="font-size:27px;font-weight:800" data-k="gmv">6.9万</div>
+      <div class="lbl mt-2 num"><span class="up"><i class="fa fa-arrow-up"></i> 18.3%</span> 环比昨日 · 线上占比 73%</div>
+    </div>
+    <div class="card kbox rise r3" style="padding:16px 18px">
+      <div style="position:absolute;right:-20px;top:-20px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle,rgba(47,158,95,.15),transparent 70%)"></div>
+      <div class="flex items-center justify-between mb-2"><span class="lbl"><i class="fa fa-paper-plane" style="color:var(--jade);width:16px"></i> 低空观光 · 今日</span><span class="st beta">载客率 88%</span></div>
+      <div class="kai num kpi" style="font-size:27px;font-weight:800" data-k="flight">132 <span style="font-size:14px;color:var(--ink3)">席 / 6 班次</span></div>
+      <div class="lbl mt-2 num">客单价 ¥298 · 首飞立减核销 67 人</div>
+    </div>
+    <div class="card kbox rise r4" style="padding:16px 18px">
+      <div style="position:absolute;right:-20px;top:-20px;width:96px;height:96px;border-radius:50%;background:radial-gradient(circle,rgba(138,111,184,.14),transparent 70%)"></div>
+      <div class="flex items-center justify-between mb-2"><span class="lbl"><i class="fa fa-cubes" style="color:#7A5BA8;width:16px"></i> 文旅产品动销</span><span class="st plan">在售 36 项</span></div>
+      <div class="kai num kpi" style="font-size:27px;font-weight:800" data-k="prod">92%</div>
+      <div class="lbl mt-2 num">AR 汉文化 3/5 解锁 · 联票转化 21%</div>
+    </div>
+  </div>
+
+  <!-- 主行：客流趋势 + 点位热度 -->
+  <div class="grid grid-cols-3 gap-4 mb-4">
+    <div class="card rise r3" style="grid-column:span 2">
+      <div class="card-h">
+        <div class="card-t"><span class="dot"></span>近 7 日 · 客流与交易<div class="card-s">游客端 + 商户端全渠道归因</div></div>
+        <div class="flex gap-1" style="background:var(--b50);padding:3px;border-radius:10px">
+          <span style="padding:4px 12px;border-radius:8px;font-size:12px;color:var(--ink3)">客流</span>
+          <span style="padding:4px 12px;border-radius:8px;font-size:12px;color:var(--ink3)">交易</span>
+          <span style="padding:4px 12px;border-radius:8px;font-size:12px;font-weight:700;color:var(--b800);background:#fff;box-shadow:0 1px 4px rgba(21,43,36,.12)">综合</span>
+        </div>
+      </div>
+      <div style="padding:6px 18px 14px;height:252px"><canvas id="trendChart"></canvas></div>
+    </div>
+
+    <div class="card rise r3" style="padding:14px 16px 16px">
+      <div class="flex items-center justify-between mb-3">
+        <div class="card-t" style="font-size:14px"><span class="dot" style="background:var(--sun)"></span>今日点位热度 <span class="card-s">09:00</span></div>
+        <span class="card-s num"><i class="fa fa-map-o"></i> 樊寨村 · 动线图</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div><div class="flex justify-between text-xs mb-1"><b>樊寨低空驿站</b><b class="num">极高 · 920</b></div><div class="heat" style="background:linear-gradient(90deg,var(--sun),#F07A3A);width:100%"></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><b>汉阙广场</b><b class="num">高 · 680</b></div><div class="heat" style="background:linear-gradient(90deg,#E9B54E,#F0A24E);width:74%"></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><b>汉文化体验馆</b><b class="num">高 · 610</b></div><div class="heat" style="background:linear-gradient(90deg,#E9B54E,#F0A24E);width:66%"></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><b>节气田园径</b><b class="num">中 · 340</b></div><div class="heat" style="background:linear-gradient(90deg,var(--b400),var(--b300));width:44%"></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><b>乡野食堂 / 汉宴</b><b class="num">中 · 280</b></div><div class="heat" style="background:linear-gradient(90deg,var(--b400),var(--b300));width:38%"></div></div>
+        <div><div class="flex justify-between text-xs mb-1"><b>汉风民宿区</b><b class="num">中 · 220</b></div><div class="heat" style="background:linear-gradient(90deg,#B99BD6,#8A6FB8);width:32%"></div></div>
+      </div>
+      <div style="margin-top:12px;background:var(--b50);border-radius:12px;padding:10px 12px;font-size:12px;color:var(--ink2)">
+        <b style="color:var(--b700)">AI 动线建议：</b>上午「低空驿站 → 汉阙广场」热力集中，建议把陶艺工坊体验前移到上午，分流 12%。
+      </div>
+    </div>
+  </div>
+
+  <!-- 第二行：交易构成 + 商户生态 + 多村对比 -->
+  <div class="grid grid-cols-3 gap-4 mb-4">
+    <div class="card rise r4">
+      <div class="card-h"><div class="card-t" style="font-size:14px"><span class="dot" style="background:var(--jade)"></span>交易构成</div></div>
+      <div style="display:flex;justify-content:center;padding:4px 10px 0;height:156px;position:relative">
+        <canvas id="mixChart"></canvas>
+      </div>
+      <div style="padding:4px 18px 14px;display:grid;grid-template-columns:1fr 1fr;gap:5px 14px;font-size:12px;color:var(--ink2)" id="mixLegend"></div>
+    </div>
+
+    <div class="card rise r4">
+      <div class="card-h"><div class="card-t" style="font-size:14px"><span class="dot" style="background:#7A5BA8"></span>商户生态 · 活力榜</div>
+        <span class="card-s"><i class="fa fa-angle-right"></i> 全部 18 家</span></div>
+      <div style="padding:10px 14px 12px">
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 6px;border-bottom:1px solid #EDF3F0">
+          <b class="num" style="width:16px;color:var(--gold)">1</b>
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#F0A24E,#CE7627);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">汉</div>
+          <div style="flex:1"><b style="font-size:13px">汉风小院</b><div class="num" style="font-size:11px;color:var(--ink3)">民宿 · 乡宴 · 汉风体验</div></div>
+          <div class="text-right num" style="font-size:12px"><b style="color:var(--b700)">4.9 分</b><div style="color:var(--ink3);font-size:11px">今日 43 单</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 6px;border-bottom:1px solid #EDF3F0">
+          <b class="num" style="width:16px;color:var(--gold)">2</b>
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7CC2A8,#14785C);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">乡</div>
+          <div style="flex:1"><b style="font-size:13px">乡野食堂</b><div class="num" style="font-size:11px;color:var(--ink3)">节气乡宴 · 汉宴承接</div></div>
+          <div class="text-right num" style="font-size:12px"><b style="color:var(--b700)">4.8 分</b><div style="color:var(--ink3);font-size:11px">今日 31 单</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 6px;border-bottom:1px solid #EDF3F0">
+          <b class="num" style="width:16px;color:var(--ink3)">3</b>
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#B99BD6,#7A5BA8);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">陶</div>
+          <div style="flex:1"><b style="font-size:13px">陶艺工坊</b><div class="num" style="font-size:11px;color:var(--ink3)">拉坯 · 汉陶烧制</div></div>
+          <div class="text-right num" style="font-size:12px"><b style="color:var(--b700)">4.9 分</b><div style="color:var(--ink3);font-size:11px">今日 18 单</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 6px">
+          <b class="num" style="width:16px;color:var(--ink3)">4</b>
+          <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#8FD0B5,#3FA586);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700">集</div>
+          <div style="flex:1"><b style="font-size:13px">节气集市 · 农创</b><div class="num" style="font-size:11px;color:var(--ink3)">汉服妆造 · 农创手作</div></div>
+          <div class="text-right num" style="font-size:12px"><b style="color:var(--b700)">4.7 分</b><div style="color:var(--ink3);font-size:11px">今日 12 单</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card rise r5">
+      <div class="card-h"><div class="card-t" style="font-size:14px"><span class="dot" style="background:#B0781E"></span>多村复制力 · 对比</div>
+        <span class="card-s">一村一档</span></div>
+      <div style="padding:12px 16px 14px">
+        <table style="width:100%">
+          <thead><tr><th style="font-size:11px;color:var(--ink3)">指标</th><th style="text-align:right;font-size:11px;color:var(--ink3)">樊寨村</th><th style="text-align:right;font-size:11px;color:var(--ink3)">李家坳</th><th style="text-align:right;font-size:11px;color:var(--ink3)">云雾坪</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--ink2)">在营商户</td><td class="num" style="text-align:right"><b>18</b></td><td class="num" style="text-align:right;color:var(--ink3)">6 · 内测</td><td class="num" style="text-align:right;color:var(--ink3)">0</td></tr>
+            <tr><td style="color:var(--ink2)">日均客流</td><td class="num" style="text-align:right"><b>1,080</b></td><td class="num" style="text-align:right;color:var(--ink3)">—</td><td class="num" style="text-align:right;color:var(--ink3)">—</td></tr>
+            <tr><td style="color:var(--ink2)">近 7 日 GMV</td><td class="num" style="text-align:right"><b>¥43.6万</b></td><td class="num" style="text-align:right;color:var(--ink3)">¥3.2万</td><td class="num" style="text-align:right;color:var(--ink3)">—</td></tr>
+            <tr><td style="color:var(--ink2)">联票转化率</td><td class="num" style="text-align:right"><b>21%</b></td><td class="num" style="text-align:right;color:var(--ink3)">内测中</td><td class="num" style="text-align:right;color:var(--ink3)">—</td></tr>
+            <tr><td style="color:var(--ink2)">商户月均增收</td><td class="num" style="text-align:right"><b>¥1.2万</b></td><td class="num" style="text-align:right;color:var(--ink3)">—</td><td class="num" style="text-align:right;color:var(--ink3)">—</td></tr>
+          </tbody>
+        </table>
+        <div style="background:var(--sun-50);border-radius:12px;padding:9px 12px;font-size:12px;color:var(--ink2);margin-top:8px">
+          <i class="fa fa-copy" style="color:var(--sun-d)"></i> <b style="color:var(--sun-d)">「樊寨模式」已沉淀</b> · 复制清单 5 类 23 项，供新村一键复用
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第三行：低空运营 + 游客之声 -->
+  <div class="grid grid-cols-3 gap-4">
+    <div class="card rise r5" style="grid-column:span 2">
+      <div class="card-h">
+        <div class="card-t" style="font-size:14px"><span class="dot" style="background:var(--sun)"></span>低空观光 · 今日班次</div>
+        <div style="display:flex;gap:6px;font-size:11px;color:var(--ink3)"><i class="fa fa-plane"></i> 空港新城起降 · 空域许可 A-2026-0912</div>
+      </div>
+      <div style="padding:10px 18px 14px">
+        <div style="display:flex;gap:10px">
+          <div style="flex:1;background:var(--b50);border-radius:14px;padding:12px 14px">
+            <div class="lbl mb-1">今日执飞</div><div class="kai num" style="font-size:20px;font-weight:800;color:var(--b700)">6 班</div>
+            <div style="font-size:11px;color:var(--ink3)">09:00–18:00 · 定员 20 席/架</div>
+          </div>
+          <div style="flex:1;background:var(--b50);border-radius:14px;padding:12px 14px">
+            <div class="lbl mb-1">平均载客率</div><div class="kai num" style="font-size:20px;font-weight:800;color:var(--b700)">88%</div>
+            <div style="font-size:11px;color:var(--ink3)">较昨日 +7pct · 16:30 班已满</div>
+          </div>
+          <div style="flex:1;background:var(--sun-50);border-radius:14px;padding:12px 14px">
+            <div class="lbl mb-1">安全与准点</div><div class="kai num" style="font-size:20px;font-weight:800;color:var(--sun-d)">100%</div>
+            <div style="font-size:11px;color:var(--ink3)">航意险全覆盖 · 无异常</div>
+          </div>
+          <div style="flex:1.6;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:0 2px">
+            <div class="flex justify-between text-xs num"><span style="color:var(--ink3)">09:00 晨曦</span><b style="color:var(--jade)">满员 100%</b></div>
+            <div class="flex justify-between text-xs num"><span style="color:var(--ink3)">11:30</span><b>82%</b></div>
+            <div class="flex justify-between text-xs num"><span style="color:var(--ink3)">14:00</span><b>91%</b></div>
+            <div class="flex justify-between text-xs num"><span style="color:var(--ink3)">16:30 夕阳</span><b style="color:var(--sun-d)">满员 · 候补 6</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card rise r5" style="padding:14px 16px">
+      <div class="card-t" style="font-size:14px;margin-bottom:10px"><span class="dot" style="background:#B0781E"></span>游客之声 · 高频词</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;line-height:1">
+        <span style="font-size:19px;font-weight:800;color:var(--b700)" class="kai">直升机</span>
+        <span style="font-size:13px;color:var(--ink3)">汉服体验</span>
+        <span style="font-size:16px;font-weight:700;color:var(--sun-d)" class="kai">观星房</span>
+        <span style="font-size:13px;color:var(--ink3)">桂花米糕</span>
+        <span style="font-size:15px;font-weight:700;color:#7A5BA8">汉宴摆盘</span>
+        <span style="font-size:12px;color:var(--ink3)">空中瞰樊寨</span>
+        <span style="font-size:14px;font-weight:700;color:var(--jade)">孩子开心</span>
+        <span style="font-size:12px;color:var(--ink3)">AR 复原</span>
+        <span style="font-size:18px;font-weight:800;color:var(--b600)" class="kai">值得飞</span>
+        <span style="font-size:13px;color:var(--ink3)">窑火体验</span>
+        <span style="font-size:15px;font-weight:700;color:var(--sun-d)">停车方便</span>
+        <span style="font-size:12px;color:var(--ink3)">服务贴心</span>
+      </div>
+      <div style="border-top:1px dashed var(--line);margin:14px 0 0">
+        <div class="flex justify-between py-1 text-xs"><span style="color:var(--ink3)">近 7 日评价</span><b class="num">1,204</b></div>
+        <div class="flex justify-between py-1 text-xs"><span style="color:var(--ink3)">综合推荐度 NPS</span><b class="num" style="color:var(--jade)">+72</b></div>
+        <div class="flex justify-between py-1 text-xs"><span style="color:var(--ink3)">不满意 & 建议</span><b class="num" style="color:var(--sun-d)">23 · 已回访</b></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:var(--ink3);font-size:12px;margin-top:18px">
+    <i class="fa fa-cloud" style="opacity:.5"></i> 飞鸟驿乡 · 让樊寨被看见　·　低空经济驱动的智慧乡村产业运营平台　·　演示原型数据
+  </div>
+</div>
+
+<script>
+  var VILL=[
+    {nm:'樊寨村',flow:'1,260',gmv:'6.9万',flight:'132',prod:'92%',live:'正式运营第 42 天'},
+    {nm:'李家坳',flow:'86',gmv:'0.8万',flight:'—',prod:'内测',live:'内测中 · 9/12 上线'},
+    {nm:'云雾坪',flow:'—',gmv:'—',flight:'—',prod:'规划',live:'筹建 · 2026Q4'}
+  ];
+  function switchVill(i){
+    var chips=document.querySelectorAll('.vchip');
+    chips.forEach(function(c,j){c.classList.toggle('active',j===i)});
+    var v=VILL[i], els=document.querySelectorAll('[data-k]');
+    ['flow','gmv','flight','prod'].forEach(function(k,j){ els[j].textContent=v[k]; });
+    var st=document.getElementById('vstatus');
+    st.innerHTML='<i class="fa fa-check-circle-o" style="color:var(--b600)"></i> '+v.nm+' · '+v.live;
+  }
+  Chart.defaults.font.family='"PingFang SC","Microsoft YaHei",sans-serif';
+  Chart.defaults.color='#8AA197';
+  var MIX=[{lab:'低空观光',v:34,c:'#E8943A'},{lab:'乡宴餐饮',v:22,c:'#14785C'},
+    {lab:'民宿宿位',v:18,c:'#7CC2A8'},{lab:'汉风体验',v:15,c:'#7A5BA8'},{lab:'文创农创',v:11,c:'#B6DDCB'}];
+  document.getElementById('mixLegend').innerHTML=MIX.map(function(m){
+    return '<div style="display:flex;align-items:center;gap:6px"><i class="fa fa-circle" style="color:'+m.c+';font-size:8px"></i>'+m.lab+'<b class="num" style="margin-left:auto;color:var(--ink)">'+m.v+'%</b></div>'}).join('');
+  new Chart(document.getElementById('mixChart'),{type:'doughnut',
+    data:{labels:MIX.map(function(m){return m.lab}),datasets:[{data:MIX.map(function(m){return m.v}),
+      backgroundColor:MIX.map(function(m){return m.c}),borderColor:'#fff',borderWidth:3,hoverOffset:4}]},
+    options:{cutout:'72%',plugins:{legend:{display:false}},animation:{duration:800}}});
+  new Chart(document.getElementById('trendChart'),{type:'bar',
+    data:{labels:['8/28','8/29','8/30','8/31','9/1','9/2','今日'],
+      datasets:[
+        {label:'在园客流(百人)',data:[62,71,86,69,98,108,126],backgroundColor:'#7CC2A8',borderRadius:7,yAxisID:'y'},
+        {label:'交易额(万元)',type:'line',data:[28,33,39,31,49,58,69],borderColor:'#E8943A',backgroundColor:'#E8943A',tension:.4,borderWidth:3,pointRadius:3.5,pointBackgroundColor:'#fff',pointBorderColor:'#E8943A',yAxisID:'y1'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{x:{grid:{display:false}},y:{position:'left',title:{display:true,text:'客流(百人)'},grid:{color:'#EDF3F0'}},
+        y1:{position:'right',title:{display:true,text:'交易额(万元)'},grid:{display:false},beginAtZero:true}},
+      plugins:{legend:{position:'top',align:'end',labels:{usePointStyle:true,pointStyle:'circle',boxWidth:6,boxHeight:6,padding:16}}}}});
+</script>
+</body>
+</html>
+
